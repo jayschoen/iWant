@@ -7,14 +7,35 @@ import(
 
 type server struct{}
 
-func( s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func root(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write( []byte( `{ "message": "hello golang" }` ) )
+
+	switch r.Method {
+		case "GET":
+			w.WriteHeader(http.StatusOK)
+			w.Write( []byte( `{ "message": "GET" }` ) )
+
+		case "POST":
+			w.WriteHeader(http.StatusCreated)
+			w.Write( []byte( `{"message": "POST"}` ) )
+		
+		case "PUT":
+			w.WriteHeader(http.StatusAccepted)
+			w.Write( []byte( `{"message": "PUT"}` ) )
+
+		case "DELETE":
+			w.WriteHeader(http.StatusOK)
+			w.Write( []byte( `{"message": "DELETE"}` ) )
+
+		default:
+			w.WriteHeader(http.StatusNotFound)
+			w.Write( []byte( `{"message": "NOT FOUND"}` ) )
+	}
 }
 
 func main() {
-	s := &server{}
-	http.Handle("/", s)
+
+	http.HandleFunc("/", root)
+
 	log.Fatal(http.ListenAndServe(":8080", nil) )
 }
