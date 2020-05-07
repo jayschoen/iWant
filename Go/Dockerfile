@@ -1,5 +1,19 @@
-FROM golang:latest
+# First build: Installs dependencies
+FROM golang:alpine as build
+RUN mkdir /app
+WORKDIR /app
 
-RUN apt-get update
-RUN apt-get install vim -y
-RUN go get "github.com/go-sql-driver/mysql"
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/server
+
+# Second build: Copy installed dependencies and build final image
+FROM scratch
+COPY --from=build /app/server /app/
+
+EXPOSE 8080
+CMD ["/app/server"]

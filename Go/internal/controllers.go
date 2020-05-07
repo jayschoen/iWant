@@ -1,4 +1,4 @@
-package main
+package iwant_controllers
 
 import (
 	"database/sql"
@@ -9,7 +9,7 @@ import (
 	"math/rand"
 )
 
-func main() {
+/*func main() {
 
 	openDatabase()
 
@@ -29,9 +29,9 @@ func main() {
 
 	get_all := get_all()
 	fmt.Println(get_all)
-}
+}*/
 
-func get_by_id (
+func get_want_by_id (
 	id int,
 ) iWant_Row {
 
@@ -65,7 +65,7 @@ func get_by_id (
 	return iWant_Row { id, slack_id, status, wants, created, target_time }
 }
 
-func get_all() []iWant_Row {
+func get_all_wants() []iWant_Row {
 
 	var(
 		id int
@@ -100,7 +100,7 @@ func get_all() []iWant_Row {
 	return rows
 }
 
-func insert(
+func insert_want(
 	slack_id int,
 	status string,
 	wants string,
@@ -121,7 +121,7 @@ func insert(
 	defer insert.Close()
 }
 
-func update(
+func update_want(
 	params UpdateParams,
 ) {
 
@@ -137,7 +137,7 @@ func update(
 	defer update.Close()
 }
 
-func delete(
+func delete_want(
 	id int,
 ) {
 
