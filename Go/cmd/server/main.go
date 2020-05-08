@@ -6,39 +6,47 @@ import(
 
 	"github.com/gorilla/mux"
 
-	iwant_controllers "github.com/jayschoen/iWant-slack-bot"
+	controllers "github.com/jayschoen/iWant-slack-bot/internal"
 )
 
-type server struct{}
+// type server struct{}
 
 func get(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write( []byte( `{"message: "GET"}` ) )
+	w.Write( []byte( `{"message": "GET"}` ) )
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write( []byte( `{"message: "POST"}` ) )
+	w.Write( []byte( `{"message": "POST"}` ) )
 }
 
 func put(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusAccepted)
-	w.Write( []byte( `{"message: "PUT"}` ) )
+	w.Write( []byte( `{"message": "PUT"}` ) )
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write( []byte( `{"message: "DELETE"}` ) )
+	w.Write( []byte( `{"message": "DELETE"}` ) )
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNotFound)
-	w.Write( []byte( `{"message: "NOT FOUND"}` ) )
+	w.Write( []byte( `{"message": "NOT FOUND"}` ) )
+}
+
+func executeTests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write( []byte( `{"message": "TESTING"}` ) )
+
+	controllers.Tests()
 }
 
 func main() {
@@ -51,5 +59,7 @@ func main() {
 	r.HandleFunc("/", delete).Methods(http.MethodDelete)
 	r.HandleFunc("/", notFound)
 
-	log.Fatal(http.ListenAndServe(":8080", nil) )
+	r.HandleFunc("/tests", executeTests).Methods(http.MethodPost)
+
+	log.Fatal(http.ListenAndServe(":8080", r) )
 }

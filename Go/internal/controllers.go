@@ -1,4 +1,4 @@
-package iwant_controllers
+package controllers
 
 import (
 	"database/sql"
@@ -9,7 +9,7 @@ import (
 	"math/rand"
 )
 
-/*func main() {
+func Tests() {
 
 	openDatabase()
 
@@ -18,18 +18,18 @@ import (
 	created := time.Now()
 	target_time := created.Add(time.Hour * 1)
 
-	insert(fake_slack_id, "Wants", "cheese", target_time)
+	insert_want(fake_slack_id, "Wants", "cheese", target_time)
 
-	update( UpdateParams{1, "Updated_3", "thing_3", target_time} )
+	update_want( UpdateParams{1, "Updated_3", "thing_3", target_time} )
 
-	delete(2)
+	delete_want(2)
 
-	get_by_id := get_by_id(1)
+	get_by_id := get_want_by_id(1)
 	fmt.Println(get_by_id)
 
-	get_all := get_all()
+	get_all := get_all_wants()
 	fmt.Println(get_all)
-}*/
+}
 
 func get_want_by_id (
 	id int,
