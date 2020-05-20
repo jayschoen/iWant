@@ -11,37 +11,34 @@ import (
 
 func Tests() {
 
-	fake_slack_id := testing_rand_num()
+	fakeSlackId := testingRandNum()
 
 	created := time.Now()
-	target_time := created.Add(time.Hour * 1)
+	targetTime := created.Add(time.Hour * 1)
 
-	insert_want(fake_slack_id, "Wants", "cheese", target_time)
+	insertWant(fakeSlackId, "Wants", "cheese", targetTime)
 
-	update_want( UpdateParams{1, "Updated_3", "thing_3", target_time} )
+	updateWant( UpdateParams{1, "Updated_3", "thing_3", targetTime} )
 
-	delete_want(2)
+	deleteWant(2)
 
-	get_by_id := Get_want_by_id(1)
-	fmt.Println(get_by_id)
+	getById := GetWantById(1)
+	fmt.Println(getById)
 
-	get_all := Get_all_wants()
-	fmt.Println(get_all)
+	getAll := GetAllWants()
+	fmt.Println(getAll)
 }
 
-func Get_want_by_id (
+func GetWantById (
 	id int,
-) iWant_Row {
-
-	//fmt.Println("get_want_by_id")
-	//fmt.Printf("id type: %T\n", id)
+) iWantRow {
 	
 	var(
-		slack_id int
+		slackId int
 		status string
 		wants string
 		created string
-		target_time string
+		targetTime string
 	)
 
 	get, err := db.Query(
@@ -56,25 +53,25 @@ func Get_want_by_id (
 	defer get.Close()
 
 	for get.Next() {
-		err := get.Scan(&id, &slack_id, &status, &wants, &created, &target_time)
+		err := get.Scan(&id, &slackId, &status, &wants, &created, &targetTime)
 
 		if err != nil {
 			panic( err.Error() )
 		}
 	}
 
-	return iWant_Row { id, slack_id, status, wants, created, target_time }
+	return iWantRow { id, slackId, status, wants, created, targetTime }
 }
 
-func Get_all_wants() []iWant_Row {
+func GetAllWants() []iWantRow {
 
 	var(
 		id int
-		slack_id int
+		slackId int
 		status string
 		wants string
 		created string
-		target_time string
+		targetTime string
 	)
 
 	get, err := db.Query(
@@ -87,32 +84,32 @@ func Get_all_wants() []iWant_Row {
 
 	defer get.Close()
 
-	var rows []iWant_Row
+	var rows []iWantRow
 	for get.Next() {
-		err := get.Scan(&id, &slack_id, &status, &wants, &created, &target_time)
+		err := get.Scan(&id, &slackId, &status, &wants, &created, &targetTime)
 
 		if err != nil {
 			panic( err.Error() )
 		}
 
-		rows = append(rows, iWant_Row {id, slack_id, status, wants, created, target_time})
+		rows = append(rows, iWantRow {id, slackId, status, wants, created, targetTime})
 	}
 
 	return rows
 }
 
-func insert_want(
-	slack_id int,
+func insertWant(
+	slackId int,
 	status string,
 	wants string,
-	target_time time.Time,
+	targetTime time.Time,
 ) {
 
 	created := time.Now()
 
 	insert, err := db.Query(
-		"INSERT INTO whatsup (slack_id, status, wants, created, target_time ) VALUES (?, ?, ?, ?, ?)",
-		slack_id, status, wants, created, target_time,
+		"INSERT INTO whatsup (slackId, status, wants, created, targetTime ) VALUES (?, ?, ?, ?, ?)",
+		slackId, status, wants, created, targetTime,
 	)
 
 	if err != nil {
@@ -122,12 +119,12 @@ func insert_want(
 	defer insert.Close()
 }
 
-func update_want(
+func updateWant(
 	params UpdateParams,
 ) {
 
 	update, err := db.Query(
-		"UPDATE whatsup SET status = ?, wants = ?, target_time = ? WHERE id = ?",
+		"UPDATE whatsup SET status = ?, wants = ?, targetTime = ? WHERE id = ?",
 		params.STATUS, params.WANTS, params.TARGET_TIME, params.ID,
 	)
 
@@ -138,7 +135,7 @@ func update_want(
 	defer update.Close()
 }
 
-func delete_want(
+func deleteWant(
 	id int,
 ) {
 
@@ -154,7 +151,7 @@ func delete_want(
 	defer delete.Close()
 }
 
-func testing_rand_num() int {
+func testingRandNum() int {
 	rand.Seed(time.Now().UnixNano())
     min := 1
 	max := 10000
@@ -162,7 +159,7 @@ func testing_rand_num() int {
     return (rand.Intn(max - min + 1) + min)
 }
 
-type iWant_Row struct {
+type iWantRow struct {
 	ID int
 	SLACK_ID int
 	STATUS string
