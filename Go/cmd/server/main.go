@@ -15,11 +15,11 @@ import(
 func get(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
-	id, has_id := vars["id"]
+	id, hasId := vars["id"]
 
-	if !has_id {
+	if !hasId {
 
-		json.NewEncoder(w).Encode(controllers.Get_all_wants())
+		json.NewEncoder(w).Encode(controllers.GetAllWants())
 
 	} else {
 
@@ -28,7 +28,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 			panic( err.Error() )
 		}
 
-		json.NewEncoder(w).Encode(controllers.Get_want_by_id(id))
+		json.NewEncoder(w).Encode(controllers.GetWantById(id))
 
 	}
 }
