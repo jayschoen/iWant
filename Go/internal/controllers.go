@@ -25,7 +25,7 @@ func Tests() {
 	get_by_id := Get_want_by_id(1)
 	fmt.Println(get_by_id)
 
-	get_all := get_all_wants()
+	get_all := Get_all_wants()
 	fmt.Println(get_all)
 }
 
@@ -66,7 +66,7 @@ func Get_want_by_id (
 	return iWant_Row { id, slack_id, status, wants, created, target_time }
 }
 
-func get_all_wants() []iWant_Row {
+func Get_all_wants() []iWant_Row {
 
 	var(
 		id int

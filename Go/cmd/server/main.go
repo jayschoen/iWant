@@ -3,7 +3,7 @@ package main
 import(
 	"log"
 	"net/http"
-	"fmt"
+	// "fmt"
 	"encoding/json"
 	"strconv"
 
@@ -15,19 +15,22 @@ import(
 func get(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
+	id, has_id := vars["id"]
 
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil || id < 1 {
-		panic( err.Error() )
+	if !has_id {
+
+		json.NewEncoder(w).Encode(controllers.Get_all_wants())
+
+	} else {
+
+		id, err := strconv.Atoi(id)
+		if err != nil || id < 1 {
+			panic( err.Error() )
+		}
+
+		json.NewEncoder(w).Encode(controllers.Get_want_by_id(id))
+
 	}
-
-	// fmt.Fprintf(w, "ID: %s\n", vars["id"])
-	fmt.Println("get test")
-	fmt.Fprintf(w, "%v", id)
-
-	want := controllers.Get_want_by_id(id)
-
-	json.NewEncoder(w).Encode(want)
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +71,8 @@ func main() {
 
 	r := mux.NewRouter().StrictSlash(true)
 
-	r.HandleFunc("/get-want/{id}", get)
+	r.HandleFunc("/get-wants/", get)
+	r.HandleFunc("/get-wants/{id}", get)
 	r.HandleFunc("/create-want", post)
 	r.HandleFunc("/update-want/{id}", put)
 	r.HandleFunc("/delete-want/{id}", delete)
