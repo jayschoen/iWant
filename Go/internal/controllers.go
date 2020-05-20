@@ -11,8 +11,6 @@ import (
 
 func Tests() {
 
-	openDatabase()
-
 	fake_slack_id := testing_rand_num()
 
 	created := time.Now()
@@ -24,17 +22,20 @@ func Tests() {
 
 	delete_want(2)
 
-	get_by_id := get_want_by_id(1)
+	get_by_id := Get_want_by_id(1)
 	fmt.Println(get_by_id)
 
 	get_all := get_all_wants()
 	fmt.Println(get_all)
 }
 
-func get_want_by_id (
+func Get_want_by_id (
 	id int,
 ) iWant_Row {
 
+	//fmt.Println("get_want_by_id")
+	//fmt.Printf("id type: %T\n", id)
+	
 	var(
 		slack_id int
 		status string
@@ -183,6 +184,6 @@ var db *sql.DB
 const MYSQL_CREDS = "docker:docker@tcp(172.19.0.2:3306)/iWant_db"
 
 // open DB connection globally
-func openDatabase() {
+func OpenDatabase() {
 	db, _ = sql.Open("mysql", MYSQL_CREDS)
 }

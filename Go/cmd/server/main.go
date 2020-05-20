@@ -3,18 +3,31 @@ package main
 import(
 	"log"
 	"net/http"
+	"fmt"
+	"encoding/json"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
 	controllers "github.com/jayschoen/iWant-slack-bot/internal"
 )
 
-// type server struct{}
-
 func get(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write( []byte( `{"message": "GET"}` ) )
+
+	vars := mux.Vars(r)
+
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil || id < 1 {
+		panic( err.Error() )
+	}
+
+	// fmt.Fprintf(w, "ID: %s\n", vars["id"])
+	fmt.Println("get test")
+	fmt.Fprintf(w, "%v", id)
+
+	want := controllers.Get_want_by_id(id)
+
+	json.NewEncoder(w).Encode(want)
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
@@ -35,31 +48,33 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	w.Write( []byte( `{"message": "DELETE"}` ) )
 }
 
+/*
 func notFound(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotFound)
-	w.Write( []byte( `{"message": "NOT FOUND"}` ) )
 }
+*/
 
 func executeTests(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write( []byte( `{"message": "TESTING"}` ) )
+
+	test := `{"message": "yay tests"}`
 
 	controllers.Tests()
+
+	json.NewEncoder(w).Encode(test)
 }
 
 func main() {
 
-	r := mux.NewRouter()
+	controllers.OpenDatabase()
 
-	r.HandleFunc("/", get).Methods(http.MethodGet)
-	r.HandleFunc("/", post).Methods(http.MethodPost)
-	r.HandleFunc("/", put).Methods(http.MethodPut)
-	r.HandleFunc("/", delete).Methods(http.MethodDelete)
-	r.HandleFunc("/", notFound)
+	r := mux.NewRouter().StrictSlash(true)
 
-	r.HandleFunc("/tests", executeTests).Methods(http.MethodPost)
+	r.HandleFunc("/get-want/{id}", get)
+	r.HandleFunc("/create-want", post)
+	r.HandleFunc("/update-want/{id}", put)
+	r.HandleFunc("/delete-want/{id}", delete)
+	// r.HandleFunc("/", notFound)
+
+	r.HandleFunc("/tests", executeTests)
 
 	log.Fatal(http.ListenAndServe(":8080", r) )
 }
