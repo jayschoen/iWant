@@ -15,5 +15,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./cmd/server
 FROM scratch
 COPY --from=build /app/server /app/
 
-EXPOSE 8080
+EXPOSE 8000
 CMD ["/app/server"]
