@@ -21,8 +21,12 @@ func Tests() {
 
 	InsertWant(fakeSlackID, "Wants", "cheese", targetTime)
 
-	//UpdateWant(UpdateParams{1, "Updated_3", "thing_3", targetTime})
-	//UpdateWant(1, "update_3", "thing_3", "time string bleh")
+	var status, wants, time []string
+	status = append(status, "string_3")
+	wants = append(wants, "thing_3")
+	time = append(time, targetTime.String())
+
+	UpdateWant(1, status, wants, time)
 
 	DeleteWant(2)
 
@@ -200,13 +204,6 @@ type iWantRow struct {
 	wants      string
 	created    string
 	targetTime string
-}
-
-type UpdateParams struct {
-	ID         int
-	Status     string
-	Wants      string
-	TargetTime time.Time
 }
 
 // Global DB
