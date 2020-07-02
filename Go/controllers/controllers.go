@@ -157,10 +157,14 @@ func UpdateWant(
 	var set []string
 	for _, k := range []string{"status", "wants", "targetTime"} {
 		if v, ok := m[k]; ok {
+			if v == "" {
+				continue
+			}
 			values = append(values, v)
 			set = append(set, fmt.Sprintf("%s = ?", k))
 		}
 	}
+
 	values = append(values, id)
 	query := "UPDATE whatsup SET " + strings.Join(set, ", ")
 	query = query + " WHERE id = ?"
