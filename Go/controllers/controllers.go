@@ -202,12 +202,12 @@ func testingRandNum() int {
 }
 
 type iWantRow struct {
-	id         int
-	slackID    int
-	status     string
-	wants      string
-	created    string
-	targetTime string
+	Id         int
+	SlackID    int
+	Status     string
+	Wants      string
+	Created    string
+	TargetTime string
 }
 
 // Global DB
