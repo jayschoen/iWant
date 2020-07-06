@@ -9,8 +9,8 @@ import (
 
 	"github.com/gorilla/mux"
 
-	controllers "github.com/jayschoen/iWant-slack-bot/controllers"
-	helpers "github.com/jayschoen/iWant-slack-bot/helpers"
+	controllers "github.com/jayschoen/iWant-backend/controllers"
+	helpers "github.com/jayschoen/iWant-backend/helpers"
 )
 
 func get(w http.ResponseWriter, r *http.Request) {

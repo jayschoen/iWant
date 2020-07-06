@@ -1,4 +1,4 @@
-module github.com/jayschoen/iWant-slack-bot
+module github.com/jayschoen/iWant-backend
 
 go 1.14
 
