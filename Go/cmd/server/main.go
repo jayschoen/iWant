@@ -15,34 +15,44 @@ import (
 
 func get(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-	paramID, hasID := vars["id"]
+	requestBody := helpers.ParseSlackPayload(r)
 
-	if !hasID {
+	if len(requestBody) > 0 {
 
-		wants, err := controllers.GetAllWants()
-		if err != nil {
-			helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		cmdText := helpers.ParseSlackPayloadText(requestBody["text"][0])
+
+		// empty slices will always have len() of 1 apparently, so check for empty string
+		if cmdText[0] == "" {
+
+			wants, err := controllers.GetAllWants()
+			if err != nil {
+				helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+
+			helpers.RespondWithJSON(w, http.StatusOK, wants)
 			return
+
 		}
 
-		helpers.RespondWithJSON(w, http.StatusOK, wants)
-		return
+		// check for length > 1 and an empty string
+		if len(cmdText) >= 1 {
 
-	}
+			id, err := strconv.Atoi(cmdText[0])
+			if err != nil || id < 1 {
+				helpers.RespondWithError(w, http.StatusBadRequest, "Invalid Want ID")
+				return
+			}
 
-	id, err := strconv.Atoi(paramID)
-	if err != nil || id < 1 {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid Want ID")
-		return
+			want, err := controllers.GetWantByID(id)
+			if err != nil {
+				helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+				return
+			}
+			helpers.RespondWithJSON(w, http.StatusOK, want)
+		}
 	}
-
-	want, err := controllers.GetWantByID(id)
-	if err != nil {
-		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	helpers.RespondWithJSON(w, http.StatusOK, want)
+	helpers.RespondWithError(w, http.StatusUnprocessableEntity, "Missing Request Body")
 }
 
 func post(w http.ResponseWriter, r *http.Request) {

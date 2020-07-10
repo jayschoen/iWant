@@ -3,7 +3,10 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -30,4 +33,29 @@ func ParseTimeString(str string) time.Time {
 	}
 
 	return t
+}
+
+func ParseSlackPayload(request *http.Request) url.Values {
+
+	defer request.Body.Close()
+
+	requestBody, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	requestBodyString := string(requestBody)
+
+	fmt.Println(requestBodyString)
+
+	parsedBody, err := url.ParseQuery(requestBodyString)
+	if err != nil {
+		panic(err)
+	}
+
+	return parsedBody
+}
+
+func ParseSlackPayloadText(text string) []string {
+	return strings.Split(text, " ")
 }
