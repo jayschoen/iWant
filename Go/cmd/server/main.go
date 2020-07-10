@@ -50,9 +50,11 @@ func get(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			helpers.RespondWithJSON(w, http.StatusOK, want)
+			return
 		}
 	}
 	helpers.RespondWithError(w, http.StatusUnprocessableEntity, "Missing Request Body")
+	return
 }
 
 func post(w http.ResponseWriter, r *http.Request) {
