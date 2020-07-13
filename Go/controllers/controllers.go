@@ -56,22 +56,13 @@ func GetWantByID(
 		targetTime string
 	)
 
-	get, err := db.Query(
+	err := db.QueryRow(
 		"SELECT * FROM whatsup WHERE id = ?",
 		id,
-	)
+	).Scan(&id, &slackID, &status, &wants, &created, &targetTime)
 
 	if err != nil {
 		return nil, err
-	}
-
-	defer get.Close()
-
-	for get.Next() {
-		if err := get.Scan(&id, &slackID, &status, &wants, &created, &targetTime); err != nil {
-			return nil, err
-		}
-
 	}
 
 	return &iWantRow{id, slackID, status, wants, created, targetTime}, nil

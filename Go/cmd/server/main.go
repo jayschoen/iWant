@@ -49,6 +49,7 @@ func get(w http.ResponseWriter, r *http.Request) {
 				helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
 				return
 			}
+
 			helpers.RespondWithJSON(w, http.StatusOK, want)
 			return
 		}
