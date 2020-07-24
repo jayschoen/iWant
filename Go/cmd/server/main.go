@@ -26,38 +26,39 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 			wants, err := controllers.GetAllWants()
 			if err != nil {
-				helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+				helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
 				return
 			}
 
-			helpers.RespondWithJSON(w, http.StatusOK, wants)
+			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, wants))
 			return
 
 		}
 
-		// check for length > 1 and an empty string
 		if len(cmdText) >= 1 {
 
 			id, err := strconv.Atoi(cmdText[0])
 			if err != nil || id < 1 {
-				helpers.RespondWithError(w, http.StatusBadRequest, "Invalid Want ID")
+				helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
 				return
 			}
 
 			want, err := controllers.GetWantByID(id)
 			if err != nil {
-				helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+				helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
 				return
 			}
 
-			helpers.RespondWithJSON(w, http.StatusOK, want)
+			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, want))
 			return
 		}
 	}
-	helpers.RespondWithError(w, http.StatusUnprocessableEntity, "Missing Request Body")
+	helpers.RespondWithError(w, helpers.ArgParser(http.StatusUnprocessableEntity, "Missing Request Body"))
 	return
 }
 
+// TODO: NEEDS A DIALOG POPUP IN SLACK
+// TODO:
 func post(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -66,18 +67,18 @@ func post(w http.ResponseWriter, r *http.Request) {
 	paramID, hasID := vars["id"]
 
 	if !hasID {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Missing Want ID")
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Want ID"))
 		return
 	}
 
 	id, err := strconv.Atoi(paramID)
 	if err != nil || id < 1 {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid Want ID")
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
 		return
 	}
 
 	if len(params) == 0 {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Parameters Are Required")
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
 		return
 	}
 
@@ -86,24 +87,28 @@ func post(w http.ResponseWriter, r *http.Request) {
 	targetTime, targetTimeExists := params["targetTime"]
 
 	if !statusExists && !wantsExists && !targetTimeExists {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Missing Parameter - Request Must Include At Least status Or wants Or targetTime")
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Parameter - Request Must Include At Least status Or wants Or targetTime"))
 		return
 	}
 
 	if err := controllers.UpdateWant(id, status, wants, targetTime); err != nil {
-		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
-	helpers.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+	return
 
 }
 
+// TODO: NEEDS A DIALOG POPUP IN SLACK
+// TODO: AND NEEDS TO GET SLACK USERS ID
+// TODO: AND NEEDS TO HANDLE targetTime PROPERLY
 func put(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 
 	if len(params) == 0 {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Parameters Are Required")
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
 		return
 	}
 
@@ -120,55 +125,60 @@ func put(w http.ResponseWriter, r *http.Request) {
 
 	for paramName, exist := range exists {
 		if !exist {
-			helpers.RespondWithError(w, http.StatusBadRequest, fmt.Sprintf("Missing Parameter: %s", paramName))
+			helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, fmt.Sprintf("Missing Parameter: %s", paramName)))
 			return
 		}
 	}
 
 	slackID, err := strconv.Atoi(paramSlackID[0])
 	if err != nil || slackID < 1 {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid Slack ID")
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Slack ID"))
 		return
 	}
 
 	if err := controllers.InsertWant(slackID, status[0], wants[0], helpers.ParseTimeString(targetTime[0])); err != nil {
-		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
+		helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
 		return
 	}
 
-	helpers.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+	return
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-	paramID, hasID := vars["id"]
+	requestBody := helpers.ParseSlackPayload(r)
 
-	if !hasID {
+	if len(requestBody) > 0 {
 
-		helpers.RespondWithError(w, http.StatusBadRequest, "Missing Want ID")
-		return
+		cmdText := helpers.ParseSlackPayloadText(requestBody["text"][0])
 
+		// empty slices will always have len() of 1 apparently, so check for empty string
+		if cmdText[0] == "" {
+
+			helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Want ID"))
+			return
+		}
+
+		if len(cmdText) >= 1 {
+
+			id, err := strconv.Atoi(cmdText[0])
+			if err != nil || id < 1 {
+				helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
+				return
+			}
+
+			if err := controllers.DeleteWant(id); err != nil {
+				helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
+				return
+			}
+
+			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+			return
+		}
 	}
-
-	id, err := strconv.Atoi(paramID)
-	if err != nil || id < 1 {
-		helpers.RespondWithError(w, http.StatusBadRequest, "Invalid Want ID")
-		return
-	}
-
-	if err := controllers.DeleteWant(id); err != nil {
-		helpers.RespondWithError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
-	helpers.RespondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
+	// TODO: maybe put an error here?
 }
-
-/*
-func notFound(w http.ResponseWriter, r *http.Request) {
-}
-*/
 
 func executeTests(w http.ResponseWriter, r *http.Request) {
 
@@ -196,7 +206,7 @@ func main() {
 	r.HandleFunc("/delete-want", delete)
 	r.HandleFunc("/delete-want/{id}", delete)
 
-	r.HandleFunc("/tests", executeTests)
+	// r.HandleFunc("/tests", executeTests)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

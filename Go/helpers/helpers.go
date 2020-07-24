@@ -10,16 +10,20 @@ import (
 	"time"
 )
 
-func RespondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
+func RespondWithJSON(w http.ResponseWriter, payload interface{}) {
+
+	wrapped_payload := map[string]interface{}{"response": payload}
+
+	response, _ := json.Marshal(wrapped_payload)
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
+	// slack **always** wants a response... so respond OK and pass the real response as json
+	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
 
-func RespondWithError(w http.ResponseWriter, code int, message string) {
-	RespondWithJSON(w, code, map[string]string{"error": message})
+func RespondWithError(w http.ResponseWriter, message interface{}) {
+	RespondWithJSON(w, map[string]interface{}{"error": message})
 }
 
 func ParseTimeString(str string) time.Time {
@@ -58,4 +62,8 @@ func ParseSlackPayload(request *http.Request) url.Values {
 
 func ParseSlackPayloadText(text string) []string {
 	return strings.Split(text, " ")
+}
+
+func ArgParser(code int, textValue interface{}) interface{} {
+	return map[string]interface{}{"code": code, "text": textValue}
 }

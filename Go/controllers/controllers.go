@@ -43,7 +43,6 @@ func Tests() {
 	fmt.Println(getAll)
 }
 
-// GetWantByID ...
 func GetWantByID(
 	id int,
 ) (*iWantRow, error) {
