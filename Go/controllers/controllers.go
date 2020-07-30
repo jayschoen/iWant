@@ -45,7 +45,7 @@ func Tests() {
 
 func GetWantByID(
 	id int,
-) (*iWantRow, error) {
+) (*IWantRow, error) {
 
 	var (
 		slackID    int
@@ -64,10 +64,10 @@ func GetWantByID(
 		return nil, err
 	}
 
-	return &iWantRow{id, slackID, status, wants, created, targetTime}, nil
+	return &IWantRow{id, slackID, status, wants, created, targetTime}, nil
 }
 
-func GetAllWants() ([]iWantRow, error) {
+func GetAllWants() ([]IWantRow, error) {
 
 	var (
 		id         int
@@ -88,13 +88,13 @@ func GetAllWants() ([]iWantRow, error) {
 
 	defer get.Close()
 
-	var rows []iWantRow
+	var rows []IWantRow
 	for get.Next() {
 		if err := get.Scan(&id, &slackID, &status, &wants, &created, &targetTime); err != nil {
 			return nil, err
 		}
 
-		rows = append(rows, iWantRow{id, slackID, status, wants, created, targetTime})
+		rows = append(rows, IWantRow{id, slackID, status, wants, created, targetTime})
 	}
 
 	return rows, nil
@@ -191,7 +191,7 @@ func testingRandNum() int {
 	return (rand.Intn(max-min+1) + min)
 }
 
-type iWantRow struct {
+type IWantRow struct {
 	Id         int
 	SlackID    int
 	Status     string

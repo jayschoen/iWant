@@ -8,13 +8,25 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	controllers "github.com/jayschoen/iWant-backend/controllers"
 )
+
+type Blocks struct {
+	Section []Section `json:"blocks"`
+}
+type Section struct {
+	Type_ string      `json:"type"`
+	Text  interface{} `json:"text"`
+}
 
 func RespondWithJSON(w http.ResponseWriter, payload interface{}) {
 
-	wrapped_payload := map[string]interface{}{"response": payload}
+	response, err := json.Marshal(payload)
 
-	response, _ := json.Marshal(wrapped_payload)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	// slack **always** wants a response... so respond OK and pass the real response as json
@@ -23,7 +35,7 @@ func RespondWithJSON(w http.ResponseWriter, payload interface{}) {
 }
 
 func RespondWithError(w http.ResponseWriter, message interface{}) {
-	RespondWithJSON(w, map[string]interface{}{"error": message})
+	RespondWithJSON(w, message)
 }
 
 func ParseTimeString(str string) time.Time {
@@ -64,6 +76,58 @@ func ParseSlackPayloadText(text string) []string {
 	return strings.Split(text, " ")
 }
 
-func ArgParser(code int, textValue interface{}) interface{} {
-	return map[string]interface{}{"code": code, "text": textValue}
+func ArgParser(code int, textValue interface{}) string {
+	fmt.Println(textValue)
+
+	return fmt.Sprintf("%v: %v", code, textValue)
+}
+
+func ItemFormatter(data interface{}) Blocks {
+	var blocks Blocks
+
+	section := Section{
+		Type_: "section",
+		Text: Section{
+			Type_: "mrkdwn",
+			Text:  fmt.Sprintf("%+v", data),
+		},
+	}
+
+	blocks.Section = append(blocks.Section, section)
+
+	return blocks
+}
+
+func PointerItemFormatter(data *controllers.IWantRow) Blocks {
+	var blocks Blocks
+
+	section := Section{
+		Type_: "section",
+		Text: Section{
+			Type_: "mrkdwn",
+			Text:  fmt.Sprintf("%+v", *data),
+		},
+	}
+
+	blocks.Section = append(blocks.Section, section)
+
+	return blocks
+}
+
+func ListFormatter(data []controllers.IWantRow) Blocks {
+	var blocks Blocks
+
+	for _, data := range data {
+		temp := Section{
+			Type_: "section",
+			Text: Section{
+				Type_: "mrkdwn",
+				Text:  fmt.Sprintf("%+v", data),
+			},
+		}
+
+		blocks.Section = append(blocks.Section, temp)
+	}
+
+	return blocks
 }

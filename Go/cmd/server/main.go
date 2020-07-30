@@ -26,11 +26,11 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 			wants, err := controllers.GetAllWants()
 			if err != nil {
-				helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
+				helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 				return
 			}
 
-			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, wants))
+			helpers.RespondWithJSON(w, helpers.ListFormatter(wants))
 			return
 
 		}
@@ -39,21 +39,21 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 			id, err := strconv.Atoi(cmdText[0])
 			if err != nil || id < 1 {
-				helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
+				helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Want ID"))
 				return
 			}
 
 			want, err := controllers.GetWantByID(id)
 			if err != nil {
-				helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
+				helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 				return
 			}
 
-			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, want))
+			helpers.RespondWithJSON(w, helpers.PointerItemFormatter(want))
 			return
 		}
 	}
-	helpers.RespondWithError(w, helpers.ArgParser(http.StatusUnprocessableEntity, "Missing Request Body"))
+	helpers.RespondWithError(w, helpers.ItemFormatter("Missing Request Body"))
 	return
 }
 
@@ -61,12 +61,39 @@ func get(w http.ResponseWriter, r *http.Request) {
 // TODO:
 func post(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-	params := r.URL.Query()
+	/* 	vars := mux.Vars(r)
+	   	params := r.URL.Query()
 
-	paramID, hasID := vars["id"]
+	   	paramID, hasID := vars["id"] */
 
-	if !hasID {
+	requestBody := helpers.ParseSlackPayload(r)
+
+	if len(requestBody) > 0 {
+
+		cmdText := helpers.ParseSlackPayloadText(requestBody["text"][0])
+
+		// empty slices will always have len() of 1 apparently, so check for empty string
+		if cmdText[0] == "" {
+			helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
+			return
+		}
+
+		if len(cmdText) >= 1 {
+
+			// missing want ID
+
+			// invalid want ID
+
+			// missing other params
+
+			// update or err
+
+			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+			return
+		}
+
+	}
+	/* if !hasID {
 		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Want ID"))
 		return
 	}
@@ -75,14 +102,14 @@ func post(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id < 1 {
 		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
 		return
-	}
+	} */
 
-	if len(params) == 0 {
+	/* if len(params) == 0 {
 		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
 		return
-	}
+	} */
 
-	status, statusExists := params["status"]
+	/* status, statusExists := params["status"]
 	wants, wantsExists := params["wants"]
 	targetTime, targetTimeExists := params["targetTime"]
 
@@ -94,10 +121,10 @@ func post(w http.ResponseWriter, r *http.Request) {
 	if err := controllers.UpdateWant(id, status, wants, targetTime); err != nil {
 		helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
 		return
-	}
+	} */
 
-	helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
-	return
+	/* 	helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+	   	return */
 
 }
 
@@ -156,7 +183,7 @@ func delete(w http.ResponseWriter, r *http.Request) {
 		// empty slices will always have len() of 1 apparently, so check for empty string
 		if cmdText[0] == "" {
 
-			helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Want ID"))
+			helpers.RespondWithError(w, helpers.ItemFormatter("Missing Want ID"))
 			return
 		}
 
@@ -164,16 +191,16 @@ func delete(w http.ResponseWriter, r *http.Request) {
 
 			id, err := strconv.Atoi(cmdText[0])
 			if err != nil || id < 1 {
-				helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
+				helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Want ID"))
 				return
 			}
 
 			if err := controllers.DeleteWant(id); err != nil {
-				helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
+				helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 				return
 			}
 
-			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+			helpers.RespondWithJSON(w, helpers.ItemFormatter("success"))
 			return
 		}
 	}
