@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -128,47 +130,43 @@ func post(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TODO: NEEDS A DIALOG POPUP IN SLACK
-// TODO: AND NEEDS TO GET SLACK USERS ID
-// TODO: AND NEEDS TO HANDLE targetTime PROPERLY
-func put(w http.ResponseWriter, r *http.Request) {
-	params := r.URL.Query()
+//insert
+func put2(w http.ResponseWriter, r *http.Request) {
+	requestBody := helpers.ParseSlackPayload(r)
 
-	if len(params) == 0 {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
+	if len(requestBody) > 0 {
+
+		command := requestBody["command"][0]
+		token := requestBody["token"][0]
+		triggerID := requestBody["trigger_id"][0]
+
+		slackExternalPost(token, triggerID, command)
+
+	}
+
+}
+
+func put(w http.ResponseWriter, userInput UserInput) {
+
+	// check if userInput is empty
+	if userInput == (UserInput{}) {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Parameters Are Required"))
 		return
 	}
 
-	paramSlackID, slackIDExists := params["slackID"]
-	status, statusExists := params["status"]
-	wants, wantsExists := params["wants"]
-	targetTime, targetTimeExists := params["targetTime"]
+	slackID := userInput.SlackID
+	status := userInput.Status
+	wants := userInput.Wants
+	targetTime := userInput.TargetTime
 
-	exists := make(map[string]bool)
-	exists["slackID"] = slackIDExists
-	exists["status"] = statusExists
-	exists["wants"] = wantsExists
-	exists["targetTime"] = targetTimeExists
-
-	for paramName, exist := range exists {
-		if !exist {
-			helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, fmt.Sprintf("Missing Parameter: %s", paramName)))
-			return
-		}
-	}
-
-	slackID, err := strconv.Atoi(paramSlackID[0])
-	if err != nil || slackID < 1 {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Slack ID"))
+	if err := controllers.InsertWant(slackID, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
+		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
 
-	if err := controllers.InsertWant(slackID, status[0], wants[0], helpers.ParseTimeString(targetTime[0])); err != nil {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
-		return
-	}
+	//helpers.RespondWithJSON(w, helpers.ItemFormatter("Success"))
 
-	helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
+	w.WriteHeader(http.StatusOK)
 	return
 }
 
@@ -207,13 +205,130 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	// TODO: maybe put an error here?
 }
 
+type UserInput struct {
+	ActionID   string
+	SlackID    string
+	Status     string
+	Wants      string
+	TargetTime string
+}
+
+func captureUserInput(w http.ResponseWriter, r *http.Request) {
+
+	fmt.Println("\n**************\ncaptureUserInput\n")
+
+	requestBody := helpers.ParseSlackPayload(r)
+
+	// fmt.Println(requestBody)
+
+	payload := requestBody["payload"]
+
+	fmt.Println("********** BEFORE MARSHAL")
+	fmt.Println(payload[0])
+
+	var vals map[string]interface{}
+	err := json.Unmarshal([]byte(payload[0]), &vals)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println("********** AFTER MARSHAL")
+	fmt.Println(vals)
+
+	actionID := vals["view"].(map[string]interface{})["callback_id"]
+
+	user := vals["user"]
+
+	values := vals["view"].(map[string]interface{})["state"].(map[string]interface{})["values"]
+
+	fmt.Println("********** values after view -> state ->")
+	fmt.Println(values)
+
+	userID := user.(map[string]interface{})["id"]
+
+	status := values.(map[string]interface{})["status"].(map[string]interface{})["status"].(map[string]interface{})["value"]
+
+	wants := values.(map[string]interface{})["wants"].(map[string]interface{})["wants"].(map[string]interface{})["value"]
+
+	targetDate := values.(map[string]interface{})["targetDate"].(map[string]interface{})["targetDate"].(map[string]interface{})["selected_date"]
+
+	targetHour := values.(map[string]interface{})["targetHour"].(map[string]interface{})["targetHour"].(map[string]interface{})["selected_option"].(map[string]interface{})["value"]
+
+	targetMinute := values.(map[string]interface{})["targetMinute"].(map[string]interface{})["targetMinute"].(map[string]interface{})["selected_option"].(map[string]interface{})["value"]
+
+	fmt.Println(actionID, userID, status, wants, targetDate, targetHour, targetMinute)
+
+	userInput := UserInput{
+		actionID.(string),
+		userID.(string), // maybe this should be user or username??
+		status.(string),
+		wants.(string),
+		targetDate.(string) + "T" + targetHour.(string) + ":" + targetMinute.(string) + ":00.000Z",
+	}
+
+	if actionID == "create" {
+		put(w, userInput)
+		return
+	}
+
+	if actionID == "update" {
+
+	}
+
+	helpers.RespondWithError(w, helpers.ItemFormatter("Unspecified Action"))
+	return
+
+}
+
+func slackExternalPost(token string, triggerID string, command string) {
+
+	origination := command
+
+	// TODO: PUT THIS IN A CONFIG ************************
+	auth := ""
+	// ***************************************************
+
+	modalInfo := controllers.ConstructModalInfo(triggerID, origination)
+
+	url := "https://slack.com/api/views.open"
+	var bearer = "Bearer " + auth
+
+	request, err := http.NewRequest("POST", url, strings.NewReader(modalInfo))
+
+	request.Header.Set("Authorization", bearer)
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+
+	if err != nil {
+		fmt.Println("POST ERROR")
+		fmt.Println(request)
+		fmt.Println(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer response.Body.Close()
+
+	fmt.Println("\n**********\nendOfexternalPost")
+	fmt.Printf("%s\n", data)
+}
+
 func executeTests(w http.ResponseWriter, r *http.Request) {
 
-	test := `{"message": "yay tests"}`
+	/* test := `{"message": "yay tests"}`
 
 	controllers.Tests()
 
-	json.NewEncoder(w).Encode(test)
+	json.NewEncoder(w).Encode(test) */
+
+	slackExternalPost("12345", "abcd1234efgh567.X", "iwant-add2")
 }
 
 func main() {
@@ -225,7 +340,8 @@ func main() {
 	r.HandleFunc("/get-wants", get)
 	r.HandleFunc("/get-wants/{id}", get)
 
-	r.HandleFunc("/create-want", put)
+	//r.HandleFunc("/create-want", put)
+	r.HandleFunc("/create-want2", put2)
 
 	r.HandleFunc("/update-want", post)
 	r.HandleFunc("/update-want/{id}", post)
@@ -233,7 +349,9 @@ func main() {
 	r.HandleFunc("/delete-want", delete)
 	r.HandleFunc("/delete-want/{id}", delete)
 
-	// r.HandleFunc("/tests", executeTests)
+	r.HandleFunc("/tests", executeTests)
+
+	r.HandleFunc("/slack/capture", captureUserInput)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

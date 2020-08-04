@@ -56,8 +56,9 @@ func ParseSlackPayload(request *http.Request) url.Values {
 	defer request.Body.Close()
 
 	requestBody, err := ioutil.ReadAll(request.Body)
+
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
 	}
 
 	requestBodyString := string(requestBody)
@@ -65,8 +66,9 @@ func ParseSlackPayload(request *http.Request) url.Values {
 	fmt.Println(requestBodyString)
 
 	parsedBody, err := url.ParseQuery(requestBodyString)
+
 	if err != nil {
-		panic(err)
+		fmt.Println(err.Error())
 	}
 
 	return parsedBody

@@ -14,7 +14,7 @@ import (
 // Tests TODO: remove this later
 func Tests() {
 
-	fakeSlackID := testingRandNum()
+	fakeSlackID := "aosidjfoasjd" //testingRandNum()
 
 	created := time.Now()
 	targetTime := created.Add(time.Hour * 1)
@@ -48,7 +48,7 @@ func GetWantByID(
 ) (*IWantRow, error) {
 
 	var (
-		slackID    int
+		slackID    string
 		status     string
 		wants      string
 		created    string
@@ -71,7 +71,7 @@ func GetAllWants() ([]IWantRow, error) {
 
 	var (
 		id         int
-		slackID    int
+		slackID    string
 		status     string
 		wants      string
 		created    string
@@ -101,7 +101,7 @@ func GetAllWants() ([]IWantRow, error) {
 }
 
 func InsertWant(
-	slackID int,
+	slackID string,
 	status string,
 	wants string,
 	targetTime time.Time,
@@ -193,7 +193,7 @@ func testingRandNum() int {
 
 type IWantRow struct {
 	Id         int
-	SlackID    int
+	SlackID    string
 	Status     string
 	Wants      string
 	Created    string
@@ -207,4 +207,214 @@ const mysqlCreds = "docker:docker@tcp(172.19.0.2:3306)/iWant_db"
 
 func OpenDatabase() {
 	db, _ = sql.Open("mysql", mysqlCreds)
+}
+
+func ConstructModalInfo(triggerID string, origination string) string {
+
+	fmt.Println(origination)
+
+	var callbackID, title string
+	if origination == "/iwant-add2" {
+		callbackID = "create"
+		title = "Add iWant"
+	} else {
+		callbackID = "update"
+		title = "Update iWant"
+	}
+
+	modalInfo := fmt.Sprintf(`{
+		"trigger_id": "%s",
+		"view": {
+			"title": {
+				"type": "plain_text",
+				"text": "%s",
+				"emoji": true
+			},
+			"submit": {
+				"type": "plain_text",
+				"text": "Submit",
+				"emoji": true
+			},
+			"type": "modal",
+			"callback_id": "%s",
+			"close": {
+				"type": "plain_text",
+				"text": "Cancel",
+				"emoji": true
+			},
+			"blocks": [
+				{
+					"block_id": "status",
+					"type": "input",
+					"element": {
+						"type": "plain_text_input",
+						"action_id": "status",
+						"placeholder": {
+							"type": "plain_text",
+							"text": "Status? (eg: Wants)"
+						}
+					},
+					"label": {
+						"type": "plain_text",
+						"text": "Status"
+					}
+				},
+				{
+					"block_id": "wants",
+					"type": "input",
+					"element": {
+						"type": "plain_text_input",
+						"action_id": "wants",
+						"placeholder": {
+							"type": "plain_text",
+							"text": "What does it want?!"
+						}
+					},
+					"label": {
+						"type": "plain_text",
+						"text": "Wants"
+					}
+				},
+				{
+					"block_id": "targetDate",
+					"type": "input",
+					"element": {
+						"type": "datepicker",
+						"action_id": "targetDate"
+					},
+					"label": {
+						"type": "plain_text",
+						"text": "Select a date",
+						"emoji": true
+					}
+				},
+				%v,
+				%v
+			]
+		}
+	}`, triggerID, title, callbackID, datepickerHour(), datepickerMinute())
+
+	fmt.Println(modalInfo)
+
+	return modalInfo
+
+}
+
+func datepickerHour() string {
+
+	template := `
+	{
+		"text": {
+			"type": "plain_text",
+			"text": "%v %v",
+			"emoji": false
+		},
+		"value": "%v"
+	},`
+
+	hours := fmt.Sprintf(template, 6, "AM", 6)
+	meridiem := "AM"
+	var twelveHour int
+
+	// 6am (including above) to 8pm?
+	for i := 7; i < 20; i++ {
+
+		if i == 12 {
+			meridiem = "PM"
+		}
+
+		twelveHour = i
+		if i > 12 {
+			twelveHour = i - 12
+		}
+
+		hours = hours + fmt.Sprintf(template, twelveHour, meridiem, i)
+
+	}
+
+	hourSelect := fmt.Sprintf(`
+	{
+		"block_id": "targetHour",
+		"type": "input",
+		"element": {
+			"type": "static_select",
+			"action_id": "targetHour",
+			"placeholder": {
+				"type": "plain_text",
+				"text": "Select an hour",
+				"emoji": true
+			},
+			"options": [
+				%v
+			]
+		},
+		"label": {
+			"type": "plain_text",
+			"text": "Select an hour",
+			"emoji": true
+		}
+	}`, hours)
+
+	// fmt.Println(hourSelect)
+
+	return hourSelect
+}
+
+func datepickerMinute() string {
+
+	minuteSelect := `
+	{
+		"block_id": "targetMinute",
+		"type": "input",
+		"element": {
+			"type": "static_select",
+			"action_id": "targetMinute",
+			"placeholder": {
+				"type": "plain_text",
+				"text": "Select a minute",
+				"emoji": true
+			},
+			"options": [
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "00",
+						"emoji": false
+					},
+					"value": "00"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "15",
+						"emoji": false
+					},
+					"value": "15"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "30",
+						"emoji": false
+					},
+					"value": "30"
+				},
+				{
+					"text": {
+						"type": "plain_text",
+						"text": "45",
+						"emoji": false
+					},
+					"value": "45"
+				},
+			]
+		},
+		"label": {
+			"type": "plain_text",
+			"text": "Select a minute",
+			"emoji": true
+		}
+	}`
+
+	return minuteSelect
 }
