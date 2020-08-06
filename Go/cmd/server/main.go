@@ -168,6 +168,11 @@ type SlackJSON struct {
 		CallbackID string `json:"callback_id"`
 		State      struct {
 			Values struct {
+				WantID struct {
+					WantID struct {
+						Value string `json:"value"`
+					} `json:"want_id"`
+				} `json:"want_id"`
 				Status struct {
 					Status struct {
 						Value string `json:"value"`
@@ -232,20 +237,27 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 
 	values := vals.View.State.Values
 
-	wantID := 0
-
 	userID := user.ID
+	wantIDString := values.WantID.WantID.Value
 	status := values.Status.Status.Value
 	wants := values.Wants.Wants.Value
 	targetDate := values.TargetDate.TargetDate.SelectedDate
 	targetHour := values.TargetHour.TargetHour.SelectedOption.Value
 	targetMinute := values.TargetMinute.TargetMinute.SelectedOption.Value
 
-	fmt.Println(actionID, wantID, userID, status, wants, targetDate, targetHour, targetMinute)
+	fmt.Println(actionID, wantIDString, userID, status, wants, targetDate, targetHour, targetMinute)
+
+	wantIDInt := 0
+	if actionID == "update" {
+		wantIDInt, err = strconv.Atoi(wantIDString)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
 
 	userInput := UserInput{
 		actionID,
-		wantID,
+		wantIDInt,
 		userID, // maybe this should be user or username??
 		status,
 		wants,
@@ -258,8 +270,8 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if actionID == "update" {
-		/* post(w, userInput)
-		return */
+		post(w, userInput)
+		return
 	}
 
 	helpers.RespondWithError(w, helpers.ItemFormatter("Unspecified Action"))
@@ -272,7 +284,7 @@ func slackExternalPost(token string, triggerID string, command string) {
 	origination := command
 
 	// TODO: PUT THIS IN A CONFIG ************************
-	auth := ""
+	auth := "xoxb-1227014263283-1212095310967-H9FQ4FPq8E3QCRMAHP1Wlhbf"
 	// ***************************************************
 
 	modalInfo := controllers.ConstructModalInfo(triggerID, origination)

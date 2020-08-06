@@ -214,23 +214,27 @@ func ConstructModalInfo(triggerID string, origination string) string {
 	fmt.Println(origination)
 
 	var callbackID, title, wantIDblock string = "", "", ""
+	var optional bool
 
 	if origination == "/iwant-add" {
 		callbackID = "create"
 		title = "Add iWant"
+		optional = false
 	}
 
 	if origination == "/iwant-update" {
 		callbackID = "update"
 		title = "Update iWant"
+		optional = true
 
 		wantIDblock = `				
 		{
-			"block_id": "wantID",
+			"block_id": "want_id",
 			"type": "input",
+			"optional": false,
 			"element": {
 				"type": "plain_text_input",
-				"action_id": "wantID",
+				"action_id": "want_id",
 				"placeholder": {
 					"type": "plain_text",
 					"text": "WantID"
@@ -245,11 +249,11 @@ func ConstructModalInfo(triggerID string, origination string) string {
 	}
 
 	modalInfo := fmt.Sprintf(`{
-		"trigger_id": "%s",
+		"trigger_id": "%[1]s",
 		"view": {
 			"title": {
 				"type": "plain_text",
-				"text": "%s",
+				"text": "%[2]s",
 				"emoji": true
 			},
 			"submit": {
@@ -258,7 +262,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				"emoji": true
 			},
 			"type": "modal",
-			"callback_id": "%s",
+			"callback_id": "%[3]s",
 			"close": {
 				"type": "plain_text",
 				"text": "Cancel",
@@ -269,6 +273,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				{
 					"block_id": "status",
 					"type": "input",
+					"optional": %[7]v,
 					"element": {
 						"type": "plain_text_input",
 						"action_id": "status",
@@ -285,6 +290,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				{
 					"block_id": "wants",
 					"type": "input",
+					"optional": %[7]v,
 					"element": {
 						"type": "plain_text_input",
 						"action_id": "wants",
@@ -301,6 +307,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				{
 					"block_id": "targetDate",
 					"type": "input",
+					"optional": %[7]v,
 					"element": {
 						"type": "datepicker",
 						"action_id": "targetDate"
@@ -311,19 +318,19 @@ func ConstructModalInfo(triggerID string, origination string) string {
 						"emoji": true
 					}
 				},
-				%v,
-				%v
+				%[5]v,
+				%[6]v
 			]
 		}
-	}`, triggerID, title, callbackID, wantIDblock, datepickerHour(), datepickerMinute())
+	}`, triggerID, title, callbackID, wantIDblock, datepickerHour(optional), datepickerMinute(optional), optional)
 
-	//fmt.Println(modalInfo)
+	fmt.Println(modalInfo)
 
 	return modalInfo
 
 }
 
-func datepickerHour() string {
+func datepickerHour(optional bool) string {
 
 	template := `
 	{
@@ -359,6 +366,7 @@ func datepickerHour() string {
 	{
 		"block_id": "targetHour",
 		"type": "input",
+		"optional": %v,
 		"element": {
 			"type": "static_select",
 			"action_id": "targetHour",
@@ -376,19 +384,20 @@ func datepickerHour() string {
 			"text": "Select an hour",
 			"emoji": true
 		}
-	}`, hours)
+	}`, optional, hours)
 
 	// fmt.Println(hourSelect)
 
 	return hourSelect
 }
 
-func datepickerMinute() string {
+func datepickerMinute(optional bool) string {
 
-	minuteSelect := `
+	minuteSelect := fmt.Sprintf(`
 	{
 		"block_id": "targetMinute",
 		"type": "input",
+		"optional": %v,
 		"element": {
 			"type": "static_select",
 			"action_id": "targetMinute",
@@ -437,7 +446,7 @@ func datepickerMinute() string {
 			"text": "Select a minute",
 			"emoji": true
 		}
-	}`
+	}`, optional)
 
 	return minuteSelect
 }
