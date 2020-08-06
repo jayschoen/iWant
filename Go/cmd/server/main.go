@@ -67,20 +67,10 @@ func post(w http.ResponseWriter, userInput UserInput) {
 		return
 	}
 
-	id, err := strconv.Atoi(paramID)
-	if err != nil || id < 1 {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Invalid Want ID"))
-		return
-	} */
-
-	/* if len(params) == 0 {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
-		return
-	} */
-
-	/* status, statusExists := params["status"]
-	wants, wantsExists := params["wants"]
-	targetTime, targetTimeExists := params["targetTime"]
+	wantID := userInput.WantID
+	status := userInput.Status
+	wants := userInput.Wants
+	targetTime := userInput.TargetTime
 
 	if err := controllers.UpdateWant(wantID, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
@@ -168,8 +158,53 @@ func delete(w http.ResponseWriter, r *http.Request) {
 	// TODO: maybe put an error here?
 }
 
+type SlackJSON struct {
+	User struct {
+		ID       string `json:"id"`
+		Name     string `json:"name"`
+		Username string `json:"username"`
+	} `json:"user"`
+	View struct {
+		CallbackID string `json:"callback_id"`
+		State      struct {
+			Values struct {
+				Status struct {
+					Status struct {
+						Value string `json:"value"`
+					} `json:"status"`
+				} `json:"status"`
+				Wants struct {
+					Wants struct {
+						Value string `json:"value"`
+					} `json:"wants"`
+				} `json:"wants"`
+				TargetDate struct {
+					TargetDate struct {
+						SelectedDate string `json:"selected_date"`
+					} `json:"targetDate"`
+				} `json:"targetDate"`
+				TargetHour struct {
+					TargetHour struct {
+						SelectedOption struct {
+							Value string `json:"value"`
+						} `json:"selected_option"`
+					} `json:"targetHour"`
+				} `json:"targetHour"`
+				TargetMinute struct {
+					TargetMinute struct {
+						SelectedOption struct {
+							Value string `json:"value"`
+						} `json:"selected_option"`
+					} `json:"targetMinute"`
+				} `json:"targetMinute"`
+			} `json:"values"`
+		} `json:"state"`
+	} `json:"view"`
+}
+
 type UserInput struct {
 	ActionID   string
+	WantID     int
 	SlackID    string
 	Status     string
 	Wants      string
@@ -178,55 +213,43 @@ type UserInput struct {
 
 func captureUserInput(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("\n**************\ncaptureUserInput\n")
-
 	requestBody := helpers.ParseSlackPayload(r)
-
-	// fmt.Println(requestBody)
 
 	payload := requestBody["payload"]
 
 	fmt.Println("********** BEFORE MARSHAL")
 	fmt.Println(payload[0])
 
-	var vals map[string]interface{}
+	var vals SlackJSON
 	err := json.Unmarshal([]byte(payload[0]), &vals)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("********** AFTER MARSHAL")
-	fmt.Println(vals)
+	actionID := vals.View.CallbackID
 
-	actionID := vals["view"].(map[string]interface{})["callback_id"]
+	user := vals.User
 
-	user := vals["user"]
+	values := vals.View.State.Values
 
-	values := vals["view"].(map[string]interface{})["state"].(map[string]interface{})["values"]
+	wantID := 0
 
-	fmt.Println("********** values after view -> state ->")
-	fmt.Println(values)
+	userID := user.ID
+	status := values.Status.Status.Value
+	wants := values.Wants.Wants.Value
+	targetDate := values.TargetDate.TargetDate.SelectedDate
+	targetHour := values.TargetHour.TargetHour.SelectedOption.Value
+	targetMinute := values.TargetMinute.TargetMinute.SelectedOption.Value
 
-	userID := user.(map[string]interface{})["id"]
-
-	status := values.(map[string]interface{})["status"].(map[string]interface{})["status"].(map[string]interface{})["value"]
-
-	wants := values.(map[string]interface{})["wants"].(map[string]interface{})["wants"].(map[string]interface{})["value"]
-
-	targetDate := values.(map[string]interface{})["targetDate"].(map[string]interface{})["targetDate"].(map[string]interface{})["selected_date"]
-
-	targetHour := values.(map[string]interface{})["targetHour"].(map[string]interface{})["targetHour"].(map[string]interface{})["selected_option"].(map[string]interface{})["value"]
-
-	targetMinute := values.(map[string]interface{})["targetMinute"].(map[string]interface{})["targetMinute"].(map[string]interface{})["selected_option"].(map[string]interface{})["value"]
-
-	fmt.Println(actionID, userID, status, wants, targetDate, targetHour, targetMinute)
+	fmt.Println(actionID, wantID, userID, status, wants, targetDate, targetHour, targetMinute)
 
 	userInput := UserInput{
-		actionID.(string),
-		userID.(string), // maybe this should be user or username??
-		status.(string),
-		wants.(string),
-		targetDate.(string) + "T" + targetHour.(string) + ":" + targetMinute.(string) + ":00.000Z",
+		actionID,
+		wantID,
+		userID, // maybe this should be user or username??
+		status,
+		wants,
+		targetDate + "T" + targetHour + ":" + targetMinute + ":00.000Z",
 	}
 
 	if actionID == "create" {
