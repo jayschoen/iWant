@@ -59,44 +59,11 @@ func get(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// TODO: NEEDS A DIALOG POPUP IN SLACK
-// TODO:
-func post(w http.ResponseWriter, r *http.Request) {
+func post(w http.ResponseWriter, userInput UserInput) {
 
-	/* 	vars := mux.Vars(r)
-	   	params := r.URL.Query()
-
-	   	paramID, hasID := vars["id"] */
-
-	requestBody := helpers.ParseSlackPayload(r)
-
-	if len(requestBody) > 0 {
-
-		cmdText := helpers.ParseSlackPayloadText(requestBody["text"][0])
-
-		// empty slices will always have len() of 1 apparently, so check for empty string
-		if cmdText[0] == "" {
-			helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Parameters Are Required"))
-			return
-		}
-
-		if len(cmdText) >= 1 {
-
-			// missing want ID
-
-			// invalid want ID
-
-			// missing other params
-
-			// update or err
-
-			helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
-			return
-		}
-
-	}
-	/* if !hasID {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Want ID"))
+	// check if userInput is empty
+	if userInput == (UserInput{}) {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Parameters Are Required"))
 		return
 	}
 
@@ -115,23 +82,19 @@ func post(w http.ResponseWriter, r *http.Request) {
 	wants, wantsExists := params["wants"]
 	targetTime, targetTimeExists := params["targetTime"]
 
-	if !statusExists && !wantsExists && !targetTimeExists {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusBadRequest, "Missing Parameter - Request Must Include At Least status Or wants Or targetTime"))
+	if err := controllers.UpdateWant(wantID, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
+		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
 
-	if err := controllers.UpdateWant(id, status, wants, targetTime); err != nil {
-		helpers.RespondWithError(w, helpers.ArgParser(http.StatusInternalServerError, err.Error()))
-		return
-	} */
+	//helpers.RespondWithJSON(w, helpers.ItemFormatter("Success"))
 
-	/* 	helpers.RespondWithJSON(w, helpers.ArgParser(http.StatusOK, map[string]interface{}{"result": "success"}))
-	   	return */
+	w.WriteHeader(http.StatusOK)
+	return
 
 }
 
-//insert
-func put2(w http.ResponseWriter, r *http.Request) {
+func preparePutOrPost(w http.ResponseWriter, r *http.Request) {
 	requestBody := helpers.ParseSlackPayload(r)
 
 	if len(requestBody) > 0 {
@@ -272,7 +235,8 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if actionID == "update" {
-
+		/* post(w, userInput)
+		return */
 	}
 
 	helpers.RespondWithError(w, helpers.ItemFormatter("Unspecified Action"))
@@ -316,7 +280,7 @@ func slackExternalPost(token string, triggerID string, command string) {
 
 	defer response.Body.Close()
 
-	fmt.Println("\n**********\nendOfexternalPost")
+	//fmt.Println("\n**********\nendOfexternalPost")
 	fmt.Printf("%s\n", data)
 }
 
@@ -338,16 +302,12 @@ func main() {
 	r := mux.NewRouter().StrictSlash(true)
 
 	r.HandleFunc("/get-wants", get)
-	r.HandleFunc("/get-wants/{id}", get)
 
-	//r.HandleFunc("/create-want", put)
-	r.HandleFunc("/create-want2", put2)
+	r.HandleFunc("/create-want", preparePutOrPost)
 
-	r.HandleFunc("/update-want", post)
-	r.HandleFunc("/update-want/{id}", post)
+	r.HandleFunc("/update-want", preparePutOrPost)
 
 	r.HandleFunc("/delete-want", delete)
-	r.HandleFunc("/delete-want/{id}", delete)
 
 	r.HandleFunc("/tests", executeTests)
 

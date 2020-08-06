@@ -21,10 +21,10 @@ func Tests() {
 
 	InsertWant(fakeSlackID, "Wants", "cheese", targetTime)
 
-	var status, wants, time []string
-	status = append(status, "string_3")
-	wants = append(wants, "thing_3")
-	time = append(time, targetTime.String())
+	var status, wants string
+	status = "string_3" //append(status, "string_3")
+	wants = "thing_3"   //append(wants, "thing_3")
+	time := targetTime  //append(time, targetTime.String())
 
 	UpdateWant(1, status, wants, time)
 
@@ -126,12 +126,12 @@ func InsertWant(
 
 func UpdateWant(
 	id int,
-	statusRaw []string,
-	wantsRaw []string,
-	targetTimeRaw []string,
+	status string,
+	wants string,
+	targetTime time.Time,
 ) error {
 
-	var status, wants, targetTime string
+	/* var status, wants, targetTime string
 	if len(statusRaw) > 0 {
 		status = statusRaw[0]
 	}
@@ -140,7 +140,7 @@ func UpdateWant(
 	}
 	if len(targetTimeRaw) > 0 {
 		targetTime = targetTimeRaw[0]
-	}
+	} */
 
 	m := map[string]interface{}{"status": status, "wants": wants, "targetTime": targetTime}
 	var values []interface{}
@@ -213,13 +213,35 @@ func ConstructModalInfo(triggerID string, origination string) string {
 
 	fmt.Println(origination)
 
-	var callbackID, title string
-	if origination == "/iwant-add2" {
+	var callbackID, title, wantIDblock string = "", "", ""
+
+	if origination == "/iwant-add" {
 		callbackID = "create"
 		title = "Add iWant"
-	} else {
+	}
+
+	if origination == "/iwant-update" {
 		callbackID = "update"
 		title = "Update iWant"
+
+		wantIDblock = `				
+		{
+			"block_id": "wantID",
+			"type": "input",
+			"element": {
+				"type": "plain_text_input",
+				"action_id": "wantID",
+				"placeholder": {
+					"type": "plain_text",
+					"text": "WantID"
+				}
+			},
+			"label": {
+				"type": "plain_text",
+				"text": "WantID"
+			}
+		},`
+
 	}
 
 	modalInfo := fmt.Sprintf(`{
@@ -243,6 +265,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				"emoji": true
 			},
 			"blocks": [
+				%s
 				{
 					"block_id": "status",
 					"type": "input",
@@ -292,9 +315,9 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				%v
 			]
 		}
-	}`, triggerID, title, callbackID, datepickerHour(), datepickerMinute())
+	}`, triggerID, title, callbackID, wantIDblock, datepickerHour(), datepickerMinute())
 
-	fmt.Println(modalInfo)
+	//fmt.Println(modalInfo)
 
 	return modalInfo
 
