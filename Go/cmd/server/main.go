@@ -285,7 +285,7 @@ func slackExternalPost(token string, triggerID string, command string) {
 	origination := command
 
 	// TODO: PUT THIS IN A CONFIG ************************
-	auth := "xoxb-1227014263283-1212095310967-H9FQ4FPq8E3QCRMAHP1Wlhbf"
+	auth := ""
 	// ***************************************************
 
 	modalInfo := controllers.ConstructModalInfo(triggerID, origination)
