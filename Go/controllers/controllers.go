@@ -48,7 +48,7 @@ func GetWantByID(
 ) (*IWantRow, error) {
 
 	var (
-		slackID    string
+		slackName  string
 		status     string
 		wants      string
 		created    string
@@ -58,20 +58,20 @@ func GetWantByID(
 	err := db.QueryRow(
 		"SELECT * FROM whatsup WHERE id = ?",
 		id,
-	).Scan(&id, &slackID, &status, &wants, &created, &targetTime)
+	).Scan(&id, &slackName, &status, &wants, &created, &targetTime)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &IWantRow{id, slackID, status, wants, created, targetTime}, nil
+	return &IWantRow{id, slackName, status, wants, created, targetTime}, nil
 }
 
 func GetAllWants() ([]IWantRow, error) {
 
 	var (
 		id         int
-		slackID    string
+		slackName  string
 		status     string
 		wants      string
 		created    string
@@ -90,18 +90,18 @@ func GetAllWants() ([]IWantRow, error) {
 
 	var rows []IWantRow
 	for get.Next() {
-		if err := get.Scan(&id, &slackID, &status, &wants, &created, &targetTime); err != nil {
+		if err := get.Scan(&id, &slackName, &status, &wants, &created, &targetTime); err != nil {
 			return nil, err
 		}
 
-		rows = append(rows, IWantRow{id, slackID, status, wants, created, targetTime})
+		rows = append(rows, IWantRow{id, slackName, status, wants, created, targetTime})
 	}
 
 	return rows, nil
 }
 
 func InsertWant(
-	slackID string,
+	slackName string,
 	status string,
 	wants string,
 	targetTime time.Time,
@@ -110,8 +110,8 @@ func InsertWant(
 	created := time.Now()
 
 	insert, err := db.Query(
-		"INSERT INTO whatsup (slackID, status, wants, created, targetTime ) VALUES (?, ?, ?, ?, ?)",
-		slackID, status, wants, created, targetTime,
+		"INSERT INTO whatsup (slackName, status, wants, created, targetTime ) VALUES (?, ?, ?, ?, ?)",
+		slackName, status, wants, created, targetTime,
 	)
 
 	if err != nil {
@@ -193,7 +193,7 @@ func testingRandNum() int {
 
 type IWantRow struct {
 	Id         int
-	SlackID    string
+	SlackName  string
 	Status     string
 	Wants      string
 	Created    string

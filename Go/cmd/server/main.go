@@ -107,12 +107,12 @@ func put(w http.ResponseWriter, userInput UserInput) {
 		return
 	}
 
-	slackID := userInput.SlackID
+	slackName := userInput.SlackName
 	status := userInput.Status
 	wants := userInput.Wants
 	targetTime := userInput.TargetTime
 
-	if err := controllers.InsertWant(slackID, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
+	if err := controllers.InsertWant(slackName, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
@@ -210,7 +210,7 @@ type SlackJSON struct {
 type UserInput struct {
 	ActionID   string
 	WantID     int
-	SlackID    string
+	SlackName  string
 	Status     string
 	Wants      string
 	TargetTime string
@@ -238,6 +238,7 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	values := vals.View.State.Values
 
 	userID := user.ID
+	userName := user.Name
 	wantIDString := values.WantID.WantID.Value
 	status := values.Status.Status.Value
 	wants := values.Wants.Wants.Value
@@ -245,7 +246,7 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	targetHour := values.TargetHour.TargetHour.SelectedOption.Value
 	targetMinute := values.TargetMinute.TargetMinute.SelectedOption.Value
 
-	fmt.Println(actionID, wantIDString, userID, status, wants, targetDate, targetHour, targetMinute)
+	fmt.Println(actionID, wantIDString, userName, userID, status, wants, targetDate, targetHour, targetMinute)
 
 	wantIDInt := 0
 	if actionID == "update" {
@@ -258,7 +259,7 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	userInput := UserInput{
 		actionID,
 		wantIDInt,
-		userID, // maybe this should be user or username??
+		userName,
 		status,
 		wants,
 		targetDate + "T" + targetHour + ":" + targetMinute + ":00.000Z",

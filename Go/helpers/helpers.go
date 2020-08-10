@@ -13,11 +13,15 @@ import (
 )
 
 type Blocks struct {
-	Section []Section `json:"blocks"`
+	Section []interface{} `json:"blocks"`
 }
 type Section struct {
 	Type_ string      `json:"type"`
 	Text  interface{} `json:"text"`
+}
+type FieldsSection struct {
+	Type_  string    `json:"type"`
+	Fields []Section `json:"fields"`
 }
 
 func RespondWithJSON(w http.ResponseWriter, payload interface{}) {
@@ -27,6 +31,8 @@ func RespondWithJSON(w http.ResponseWriter, payload interface{}) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println(string(response))
 
 	w.Header().Set("Content-Type", "application/json")
 	// slack **always** wants a response... so respond OK and pass the real response as json
@@ -103,15 +109,34 @@ func ItemFormatter(data interface{}) Blocks {
 func PointerItemFormatter(data *controllers.IWantRow) Blocks {
 	var blocks Blocks
 
-	section := Section{
-		Type_: "section",
-		Text: Section{
+	var fields FieldsSection
+	fields.Type_ = "section"
+
+	id := fmt.Sprint(data.Id)
+	slackName := data.SlackName
+	status := data.Status
+	wants := data.Wants
+	created := data.Created
+	target := data.TargetTime
+
+	values := [7]string{id, slackName, status, wants, created, target}
+
+	headers := [7]string{"wantID", "name", "status", "wants", "created", "targetTime"}
+	for key, val := range headers {
+
+		tmp := fmt.Sprintf("*%v:* _%v_", val, values[key])
+		if key == 1 {
+			tmp = fmt.Sprintf("%v", val)
+		}
+
+		field := Section{
 			Type_: "mrkdwn",
-			Text:  fmt.Sprintf("%+v", *data),
-		},
+			Text:  tmp,
+		}
+		fields.Fields = append(fields.Fields, field)
 	}
 
-	blocks.Section = append(blocks.Section, section)
+	blocks.Section = append(blocks.Section, fields)
 
 	return blocks
 }
