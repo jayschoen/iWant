@@ -17,14 +17,14 @@ func Tests() {
 	fakeSlackID := "aosidjfoasjd" //testingRandNum()
 
 	created := time.Now()
-	targetTime := created.Add(time.Hour * 1)
+	appointmentTime := created.Add(time.Hour * 1)
 
-	InsertWant(fakeSlackID, "Wants", "cheese", targetTime)
+	InsertWant(fakeSlackID, "Wants", "cheese", appointmentTime)
 
 	var status, wants string
-	status = "string_3" //append(status, "string_3")
-	wants = "thing_3"   //append(wants, "thing_3")
-	time := targetTime  //append(time, targetTime.String())
+	status = "string_3"     //append(status, "string_3")
+	wants = "thing_3"       //append(wants, "thing_3")
+	time := appointmentTime //append(time, appointmentTime.String())
 
 	UpdateWant(1, status, wants, time)
 
@@ -48,34 +48,34 @@ func GetWantByID(
 ) (*IWantRow, error) {
 
 	var (
-		slackName  string
-		status     string
-		wants      string
-		created    string
-		targetTime string
+		slackName       string
+		status          string
+		wants           string
+		created         string
+		appointmentTime string
 	)
 
 	err := db.QueryRow(
 		"SELECT * FROM whatsup WHERE id = ?",
 		id,
-	).Scan(&id, &slackName, &status, &wants, &created, &targetTime)
+	).Scan(&id, &slackName, &status, &wants, &created, &appointmentTime)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &IWantRow{id, slackName, status, wants, created, targetTime}, nil
+	return &IWantRow{id, slackName, status, wants, created, appointmentTime}, nil
 }
 
 func GetAllWants() ([]IWantRow, error) {
 
 	var (
-		id         int
-		slackName  string
-		status     string
-		wants      string
-		created    string
-		targetTime string
+		id              int
+		slackName       string
+		status          string
+		wants           string
+		created         string
+		appointmentTime string
 	)
 
 	get, err := db.Query(
@@ -90,11 +90,11 @@ func GetAllWants() ([]IWantRow, error) {
 
 	var rows []IWantRow
 	for get.Next() {
-		if err := get.Scan(&id, &slackName, &status, &wants, &created, &targetTime); err != nil {
+		if err := get.Scan(&id, &slackName, &status, &wants, &created, &appointmentTime); err != nil {
 			return nil, err
 		}
 
-		rows = append(rows, IWantRow{id, slackName, status, wants, created, targetTime})
+		rows = append(rows, IWantRow{id, slackName, status, wants, created, appointmentTime})
 	}
 
 	return rows, nil
@@ -104,14 +104,14 @@ func InsertWant(
 	slackName string,
 	status string,
 	wants string,
-	targetTime time.Time,
+	appointmentTime time.Time,
 ) error {
 
 	created := time.Now()
 
 	insert, err := db.Query(
-		"INSERT INTO whatsup (slackName, status, wants, created, targetTime ) VALUES (?, ?, ?, ?, ?)",
-		slackName, status, wants, created, targetTime,
+		"INSERT INTO whatsup (slackName, status, wants, created, appointmentTime ) VALUES (?, ?, ?, ?, ?)",
+		slackName, status, wants, created, appointmentTime,
 	)
 
 	if err != nil {
@@ -128,24 +128,24 @@ func UpdateWant(
 	id int,
 	status string,
 	wants string,
-	targetTime time.Time,
+	appointmentTime time.Time,
 ) error {
 
-	/* var status, wants, targetTime string
+	/* var status, wants, appointmentTime string
 	if len(statusRaw) > 0 {
 		status = statusRaw[0]
 	}
 	if len(wantsRaw) > 0 {
 		wants = wantsRaw[0]
 	}
-	if len(targetTimeRaw) > 0 {
-		targetTime = targetTimeRaw[0]
+	if len(appointmentTimeRaw) > 0 {
+		appointmentTime = appointmentTimeRaw[0]
 	} */
 
-	m := map[string]interface{}{"status": status, "wants": wants, "targetTime": targetTime}
+	m := map[string]interface{}{"status": status, "wants": wants, "appointmentTime": appointmentTime}
 	var values []interface{}
 	var set []string
-	for _, k := range []string{"status", "wants", "targetTime"} {
+	for _, k := range []string{"status", "wants", "appointmentTime"} {
 		if v, ok := m[k]; ok {
 			if v == "" {
 				continue
@@ -192,12 +192,12 @@ func testingRandNum() int {
 }
 
 type IWantRow struct {
-	Id         int
-	SlackName  string
-	Status     string
-	Wants      string
-	Created    string
-	TargetTime string
+	Id              int
+	SlackName       string
+	Status          string
+	Wants           string
+	Created         string
+	AppointmentTime string
 }
 
 // Global DB

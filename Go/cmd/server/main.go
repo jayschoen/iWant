@@ -70,9 +70,9 @@ func post(w http.ResponseWriter, userInput UserInput) {
 	wantID := userInput.WantID
 	status := userInput.Status
 	wants := userInput.Wants
-	targetTime := userInput.TargetTime
+	appointmentTime := userInput.appointmentTime
 
-	if err := controllers.UpdateWant(wantID, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
+	if err := controllers.UpdateWant(wantID, status, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
@@ -110,9 +110,9 @@ func put(w http.ResponseWriter, userInput UserInput) {
 	slackName := userInput.SlackName
 	status := userInput.Status
 	wants := userInput.Wants
-	targetTime := userInput.TargetTime
+	appointmentTime := userInput.appointmentTime
 
-	if err := controllers.InsertWant(slackName, status, wants, helpers.ParseTimeString(targetTime)); err != nil {
+	if err := controllers.InsertWant(slackName, status, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
@@ -208,12 +208,12 @@ type SlackJSON struct {
 }
 
 type UserInput struct {
-	ActionID   string
-	WantID     int
-	SlackName  string
-	Status     string
-	Wants      string
-	TargetTime string
+	ActionID        string
+	WantID          int
+	SlackName       string
+	Status          string
+	Wants           string
+	appointmentTime string
 }
 
 func captureUserInput(w http.ResponseWriter, r *http.Request) {

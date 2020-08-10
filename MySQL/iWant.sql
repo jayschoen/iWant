@@ -6,7 +6,7 @@ Create table `whatsup` (
 	status varchar(20),
 	wants varchar(50),
 	created datetime NOT NULL,
-	targetTime datetime,
+	appointmentTime datetime,
 	PRIMARY KEY (id)
 );
 
