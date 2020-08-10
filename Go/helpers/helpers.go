@@ -112,6 +112,8 @@ func PointerItemFormatter(data *controllers.IWantRow) Blocks {
 	var fields FieldsSection
 	fields.Type_ = "section"
 
+	fmt.Println(data)
+
 	id := fmt.Sprint(data.Id)
 	slackName := data.SlackName
 	status := data.Status
@@ -119,15 +121,12 @@ func PointerItemFormatter(data *controllers.IWantRow) Blocks {
 	created := data.Created
 	target := data.TargetTime
 
-	values := [7]string{id, slackName, status, wants, created, target}
+	values := [6]string{id, slackName, status, wants, created, target}
 
-	headers := [7]string{"wantID", "name", "status", "wants", "created", "targetTime"}
+	headers := [6]string{"wantID", "slackName", "status", "wants", "created", "targetTime"}
 	for key, val := range headers {
 
 		tmp := fmt.Sprintf("*%v:* _%v_", val, values[key])
-		if key == 1 {
-			tmp = fmt.Sprintf("%v", val)
-		}
 
 		field := Section{
 			Type_: "mrkdwn",
