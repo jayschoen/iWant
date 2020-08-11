@@ -213,7 +213,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 
 	fmt.Println(origination)
 
-	var callbackID, title, wantIDblock string = "", "", ""
+	var callbackID, title, wantIDblock, appointmentTimeBlock string = "", "", "", ""
 	var optional bool
 
 	if origination == "/iwant-add" {
@@ -246,11 +246,31 @@ func ConstructModalInfo(triggerID string, origination string) string {
 			}
 		},`
 
+		appointmentTimeBlock = fmt.Sprintf(`,
+			{
+				"block_id": "targetDate",
+				"type": "input",
+				"optional": %v,
+				"element": {
+					"type": "datepicker",
+					"action_id": "targetDate"
+				},
+				"label": {
+					"type": "plain_text",
+					"text": "Select a date",
+					"emoji": true
+				}
+			},
+			%v,
+			%v
+		`, optional, datepickerHour(optional), datepickerMinute(optional))
+
 	}
 
 	modalInfo := fmt.Sprintf(`{
 		"trigger_id": "%[1]s",
 		"view": {
+			"private_metadata": "%[7]s",
 			"title": {
 				"type": "plain_text",
 				"text": "%[2]s",
@@ -269,11 +289,11 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				"emoji": true
 			},
 			"blocks": [
-				%s
+				%[4]s
 				{
 					"block_id": "status",
 					"type": "input",
-					"optional": %[7]v,
+					"optional": %[6]v,
 					"element": {
 						"type": "plain_text_input",
 						"action_id": "status",
@@ -290,7 +310,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				{
 					"block_id": "wants",
 					"type": "input",
-					"optional": %[7]v,
+					"optional": %[6]v,
 					"element": {
 						"type": "plain_text_input",
 						"action_id": "wants",
@@ -303,23 +323,8 @@ func ConstructModalInfo(triggerID string, origination string) string {
 						"type": "plain_text",
 						"text": "Wants"
 					}
-				},
-				{
-					"block_id": "targetDate",
-					"type": "input",
-					"optional": %[7]v,
-					"element": {
-						"type": "datepicker",
-						"action_id": "targetDate"
-					},
-					"label": {
-						"type": "plain_text",
-						"text": "Select a date",
-						"emoji": true
-					}
-				},
-				%[5]v,
-				%[6]v
+				}
+				%[5]v
 			]
 		}
 	}`, triggerID, title, callbackID, wantIDblock, appointmentTimeBlock, optional)

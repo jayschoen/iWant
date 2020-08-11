@@ -110,7 +110,7 @@ func put(w http.ResponseWriter, userInput UserInput) {
 	slackName := userInput.SlackName
 	status := userInput.Status
 	wants := userInput.Wants
-	appointmentTime := userInput.appointmentTime
+	appointmentTime := "0000-00-00T00:00:00.000Z" // userInput.appointmentTime
 
 	if err := controllers.InsertWant(slackName, status, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
