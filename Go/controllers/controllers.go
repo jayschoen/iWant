@@ -322,7 +322,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				%[6]v
 			]
 		}
-	}`, triggerID, title, callbackID, wantIDblock, datepickerHour(optional), datepickerMinute(optional), optional)
+	}`, triggerID, title, callbackID, wantIDblock, appointmentTimeBlock, optional)
 
 	fmt.Println(modalInfo)
 
