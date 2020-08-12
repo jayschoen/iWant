@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -282,9 +283,7 @@ func slackExternalPost(token string, triggerID string, command string) {
 
 	origination := command
 
-	// TODO: PUT THIS IN A CONFIG ************************
-	auth := ""
-	// ***************************************************
+	auth := os.Getenv("SLACK_TOKEN")
 
 	modalInfo := controllers.ConstructModalInfo(triggerID, origination)
 

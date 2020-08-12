@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"database/sql"
+	"os"
 	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -192,9 +193,17 @@ type IWantRow struct {
 // Global DB
 var db *sql.DB
 
-const mysqlCreds = "docker:docker@tcp(172.19.0.2:3306)/iWant_db"
-
 func OpenDatabase() {
+
+	dbUser := os.Getenv("DB_USERNAME")
+	dbPass := os.Getenv("DB_PASSWORD")
+	dbProtocol := os.Getenv("DB_PROTOCOL")
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbName := os.Getenv("DB_NAME")
+
+	var mysqlCreds = fmt.Sprintf("%v:%v@%v(%v:%v)/%v", dbUser, dbPass, dbProtocol, dbHost, dbPort, dbName) // "docker:docker@tcp(172.19.0.2:3306)/iWant_db"
+
 	db, _ = sql.Open("mysql", mysqlCreds)
 }
 
@@ -259,7 +268,6 @@ func ConstructModalInfo(triggerID string, origination string) string {
 	modalInfo := fmt.Sprintf(`{
 		"trigger_id": "%[1]s",
 		"view": {
-			"private_metadata": "%[7]s",
 			"title": {
 				"type": "plain_text",
 				"text": "%[2]s",
