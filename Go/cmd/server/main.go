@@ -77,8 +77,6 @@ func post(w http.ResponseWriter, userInput UserInput) {
 		return
 	}
 
-	//helpers.RespondWithJSON(w, helpers.ItemFormatter("Success"))
-
 	w.WriteHeader(http.StatusOK)
 	return
 
@@ -110,14 +108,12 @@ func put(w http.ResponseWriter, userInput UserInput) {
 	slackName := userInput.SlackName
 	urgency := userInput.Urgency
 	wants := userInput.Wants
-	appointmentTime := "0000-00-00T00:00:00.000Z" // userInput.appointmentTime
+	appointmentTime := "0000-00-00T00:00:00.000Z"
 
 	if err := controllers.InsertWant(slackName, urgency, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
-
-	//helpers.RespondWithJSON(w, helpers.ItemFormatter("Success"))
 
 	w.WriteHeader(http.StatusOK)
 	return
@@ -310,15 +306,16 @@ func slackExternalPost(token string, triggerID string, command string) {
 		fmt.Println(err.Error())
 	}
 
+	defer response.Body.Close()
+
+	/* *** maybe can get rid of below? *** */
+
 	data, err := ioutil.ReadAll(response.Body)
 
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	defer response.Body.Close()
-
-	//fmt.Println("\n**********\nendOfexternalPost")
 	fmt.Printf("%s\n", data)
 }
 
