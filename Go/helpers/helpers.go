@@ -140,19 +140,50 @@ func PointerItemFormatter(data *controllers.IWantRow) Blocks {
 	return blocks
 }
 
-func ListFormatter(data []controllers.IWantRow) Blocks {
+func ListFormatter(rawData []controllers.IWantRow) Blocks {
 	var blocks Blocks
 
-	for _, data := range data {
-		temp := Section{
-			Type_: "section",
-			Text: Section{
+	var fields FieldsSection
+	fields.Type_ = "section"
+
+	divider := struct {
+		Type_ string `json:"type"`
+	}{
+		Type_: "divider",
+	}
+
+	for index, data := range rawData {
+
+		id := fmt.Sprint(data.Id)
+		slackName := data.SlackName
+		status := data.Status
+		wants := data.Wants
+		created := data.Created
+		target := data.AppointmentTime
+
+		values := [6]string{id, slackName, status, wants, created, target}
+
+		headers := [6]string{"wantID", "slackName", "status", "wants", "created", "appointmentTime"}
+
+		for key, val := range headers {
+
+			tmp := fmt.Sprintf("*%v:* _%v_", val, values[key])
+
+			field := Section{
 				Type_: "mrkdwn",
-				Text:  fmt.Sprintf("%+v", data),
-			},
+				Text:  tmp,
+			}
+			fields.Fields = append(fields.Fields, field)
+
 		}
 
-		blocks.Section = append(blocks.Section, temp)
+		blocks.Section = append(blocks.Section, fields)
+
+		if index < len(rawData)-1 {
+			blocks.Section = append(blocks.Section, divider)
+		}
+
+		fields.Fields = nil
 	}
 
 	return blocks
