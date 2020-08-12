@@ -116,14 +116,14 @@ func PointerItemFormatter(data *controllers.IWantRow) Blocks {
 
 	id := fmt.Sprint(data.Id)
 	slackName := data.SlackName
-	status := data.Status
+	urgency := data.Urgency
 	wants := data.Wants
 	created := data.Created
 	target := data.AppointmentTime
 
-	values := [6]string{id, slackName, status, wants, created, target}
+	values := [6]string{id, slackName, urgency, wants, created, target}
 
-	headers := [6]string{"wantID", "slackName", "status", "wants", "created", "appointmentTime"}
+	headers := [6]string{"wantID", "slackName", "urgency", "wants", "created", "appointmentTime"}
 	for key, val := range headers {
 
 		tmp := fmt.Sprintf("*%v:* _%v_", val, values[key])
@@ -156,14 +156,14 @@ func ListFormatter(rawData []controllers.IWantRow) Blocks {
 
 		id := fmt.Sprint(data.Id)
 		slackName := data.SlackName
-		status := data.Status
+		urgency := data.Urgency
 		wants := data.Wants
 		created := data.Created
 		target := data.AppointmentTime
 
-		values := [6]string{id, slackName, status, wants, created, target}
+		values := [6]string{id, slackName, urgency, wants, created, target}
 
-		headers := [6]string{"wantID", "slackName", "status", "wants", "created", "appointmentTime"}
+		headers := [6]string{"wantID", "slackName", "urgency", "wants", "created", "appointmentTime"}
 
 		for key, val := range headers {
 

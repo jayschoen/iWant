@@ -68,11 +68,11 @@ func post(w http.ResponseWriter, userInput UserInput) {
 	}
 
 	wantID := userInput.WantID
-	status := userInput.Status
+	urgency := userInput.Urgency
 	wants := userInput.Wants
 	appointmentTime := userInput.appointmentTime
 
-	if err := controllers.UpdateWant(wantID, status, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
+	if err := controllers.UpdateWant(wantID, urgency, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
@@ -108,11 +108,11 @@ func put(w http.ResponseWriter, userInput UserInput) {
 	}
 
 	slackName := userInput.SlackName
-	status := userInput.Status
+	urgency := userInput.Urgency
 	wants := userInput.Wants
 	appointmentTime := "0000-00-00T00:00:00.000Z" // userInput.appointmentTime
 
-	if err := controllers.InsertWant(slackName, status, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
+	if err := controllers.InsertWant(slackName, urgency, wants, helpers.ParseTimeString(appointmentTime)); err != nil {
 		helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 		return
 	}
@@ -173,11 +173,13 @@ type SlackJSON struct {
 						Value string `json:"value"`
 					} `json:"want_id"`
 				} `json:"want_id"`
-				Status struct {
-					Status struct {
-						Value string `json:"value"`
-					} `json:"status"`
-				} `json:"status"`
+				Urgency struct {
+					Urgency struct {
+						SelectedOption struct {
+							Value string `json:"value"`
+						} `json:"selected_option"`
+					} `json:"urgency"`
+				} `json:"urgency"`
 				Wants struct {
 					Wants struct {
 						Value string `json:"value"`
@@ -211,7 +213,7 @@ type UserInput struct {
 	ActionID        string
 	WantID          int
 	SlackName       string
-	Status          string
+	Urgency         string
 	Wants           string
 	appointmentTime string
 }
@@ -240,13 +242,13 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	userID := user.ID
 	userName := user.Name
 	wantIDString := values.WantID.WantID.Value
-	status := values.Status.Status.Value
+	urgency := values.Urgency.Urgency.SelectedOption.Value
 	wants := values.Wants.Wants.Value
 	targetDate := values.TargetDate.TargetDate.SelectedDate
 	targetHour := values.TargetHour.TargetHour.SelectedOption.Value
 	targetMinute := values.TargetMinute.TargetMinute.SelectedOption.Value
 
-	fmt.Println(actionID, wantIDString, userName, userID, status, wants, targetDate, targetHour, targetMinute)
+	fmt.Println(actionID, wantIDString, userName, userID, urgency, wants, targetDate, targetHour, targetMinute)
 
 	wantIDInt := 0
 	if actionID == "update" {
@@ -260,7 +262,7 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 		actionID,
 		wantIDInt,
 		userName,
-		status,
+		urgency,
 		wants,
 		targetDate + "T" + targetHour + ":" + targetMinute + ":00.000Z",
 	}

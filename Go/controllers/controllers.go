@@ -21,12 +21,12 @@ func Tests() {
 
 	InsertWant(fakeSlackID, "Wants", "cheese", appointmentTime)
 
-	var status, wants string
-	status = "string_3"     //append(status, "string_3")
+	var urgency, wants string
+	urgency = "string_3"    //append(urgency, "string_3")
 	wants = "thing_3"       //append(wants, "thing_3")
 	time := appointmentTime //append(time, appointmentTime.String())
 
-	UpdateWant(1, status, wants, time)
+	UpdateWant(1, urgency, wants, time)
 
 	DeleteWant(2)
 
@@ -49,7 +49,7 @@ func GetWantByID(
 
 	var (
 		slackName       string
-		status          string
+		urgency         string
 		wants           string
 		created         string
 		appointmentTime string
@@ -58,13 +58,13 @@ func GetWantByID(
 	err := db.QueryRow(
 		"SELECT * FROM whatsup WHERE id = ?",
 		id,
-	).Scan(&id, &slackName, &status, &wants, &created, &appointmentTime)
+	).Scan(&id, &slackName, &urgency, &wants, &created, &appointmentTime)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &IWantRow{id, slackName, status, wants, created, appointmentTime}, nil
+	return &IWantRow{id, slackName, urgency, wants, created, appointmentTime}, nil
 }
 
 func GetAllWants() ([]IWantRow, error) {
@@ -72,7 +72,7 @@ func GetAllWants() ([]IWantRow, error) {
 	var (
 		id              int
 		slackName       string
-		status          string
+		urgency         string
 		wants           string
 		created         string
 		appointmentTime string
@@ -90,11 +90,11 @@ func GetAllWants() ([]IWantRow, error) {
 
 	var rows []IWantRow
 	for get.Next() {
-		if err := get.Scan(&id, &slackName, &status, &wants, &created, &appointmentTime); err != nil {
+		if err := get.Scan(&id, &slackName, &urgency, &wants, &created, &appointmentTime); err != nil {
 			return nil, err
 		}
 
-		rows = append(rows, IWantRow{id, slackName, status, wants, created, appointmentTime})
+		rows = append(rows, IWantRow{id, slackName, urgency, wants, created, appointmentTime})
 	}
 
 	return rows, nil
@@ -102,7 +102,7 @@ func GetAllWants() ([]IWantRow, error) {
 
 func InsertWant(
 	slackName string,
-	status string,
+	urgency string,
 	wants string,
 	appointmentTime time.Time,
 ) error {
@@ -110,8 +110,8 @@ func InsertWant(
 	created := time.Now()
 
 	insert, err := db.Query(
-		"INSERT INTO whatsup (slackName, status, wants, created, appointmentTime ) VALUES (?, ?, ?, ?, ?)",
-		slackName, status, wants, created, appointmentTime,
+		"INSERT INTO whatsup (slackName, urgency, wants, created, appointmentTime ) VALUES (?, ?, ?, ?, ?)",
+		slackName, urgency, wants, created, appointmentTime,
 	)
 
 	if err != nil {
@@ -126,26 +126,15 @@ func InsertWant(
 
 func UpdateWant(
 	id int,
-	status string,
+	urgency string,
 	wants string,
 	appointmentTime time.Time,
 ) error {
 
-	/* var status, wants, appointmentTime string
-	if len(statusRaw) > 0 {
-		status = statusRaw[0]
-	}
-	if len(wantsRaw) > 0 {
-		wants = wantsRaw[0]
-	}
-	if len(appointmentTimeRaw) > 0 {
-		appointmentTime = appointmentTimeRaw[0]
-	} */
-
-	m := map[string]interface{}{"status": status, "wants": wants, "appointmentTime": appointmentTime}
+	m := map[string]interface{}{"urgency": urgency, "wants": wants, "appointmentTime": appointmentTime}
 	var values []interface{}
 	var set []string
-	for _, k := range []string{"status", "wants", "appointmentTime"} {
+	for _, k := range []string{"urgency", "wants", "appointmentTime"} {
 		if v, ok := m[k]; ok {
 			if v == "" {
 				continue
@@ -194,7 +183,7 @@ func testingRandNum() int {
 type IWantRow struct {
 	Id              int
 	SlackName       string
-	Status          string
+	Urgency         string
 	Wants           string
 	Created         string
 	AppointmentTime string
@@ -291,20 +280,64 @@ func ConstructModalInfo(triggerID string, origination string) string {
 			"blocks": [
 				%[4]s
 				{
-					"block_id": "status",
+					"block_id": "urgency",
 					"type": "input",
 					"optional": %[6]v,
 					"element": {
-						"type": "plain_text_input",
-						"action_id": "status",
+						"type": "static_select",
+						"action_id": "urgency",
 						"placeholder": {
 							"type": "plain_text",
-							"text": "Status? (eg: Wants)"
-						}
+							"text": "Choose a urgency:",
+							"emoji": true
+						},
+						"options": [
+							{
+								"text": {
+									"type": "plain_text",
+									"text": "(1) No Big Deal",
+									"emoji": false
+								},
+								"value": "(1) No Big Deal"
+							},
+							{
+								"text": {
+									"type": "plain_text",
+									"text": "(2) Would Be Nice",
+									"emoji": false
+								},
+								"value": "(2) Would Be Nice"
+							},
+							{
+								"text": {
+									"type": "plain_text",
+									"text": "(3) Mildy Urgent",
+									"emoji": false
+								},
+								"value": "(3) Mildy Urgent"
+							},
+							{
+								"text": {
+									"type": "plain_text",
+									"text": "(4) Please Complete ASAP",
+									"emoji": false
+								},
+								"value": "(4) Please Complete ASAP"
+							},
+							{
+								"text": {
+									"type": "plain_text",
+									"text": "(5) EVERYTHING IS ON FIRE!!",
+									"emoji": false
+								},
+								"value": "(5) EVERYTHING IS ON FIRE!!"
+							},
+						]
 					},
 					"label": {
 						"type": "plain_text",
-						"text": "Status"
+						"text": "Choose a urgency...",
+						"emoji": true
 					}
 				},
 				{
@@ -390,8 +423,6 @@ func datepickerHour(optional bool) string {
 			"emoji": true
 		}
 	}`, optional, hours)
-
-	// fmt.Println(hourSelect)
 
 	return hourSelect
 }
