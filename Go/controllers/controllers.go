@@ -319,10 +319,10 @@ func ConstructModalInfo(triggerID string, origination string) string {
 							{
 								"text": {
 									"type": "plain_text",
-									"text": "(4) Please Complete ASAP",
+									"text": "(4) I'm Stuck Without This",
 									"emoji": false
 								},
-								"value": "(4) Please Complete ASAP"
+								"value": "(4) I'm Stuck Without This"
 							},
 							{
 								"text": {
