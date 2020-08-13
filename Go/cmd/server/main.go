@@ -94,6 +94,12 @@ func preparePutOrPost(w http.ResponseWriter, r *http.Request) {
 
 		cmdText := helpers.ParseSlackPayloadText(requestBody["text"][0])
 		if command == "/iwant-update" {
+
+			if helpers.CheckAuthorization(requestBody["user_name"][0]) != true {
+				helpers.RespondWithError(w, helpers.ItemFormatter("Not Authorized"))
+				return
+			}
+
 			if cmdText[0] != "" {
 				id, err := strconv.Atoi(cmdText[0])
 
@@ -139,6 +145,11 @@ func put(w http.ResponseWriter, userInput UserInput) {
 func delete(w http.ResponseWriter, r *http.Request) {
 
 	requestBody := helpers.ParseSlackPayload(r)
+
+	if helpers.CheckAuthorization(requestBody["user_name"][0]) != true {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Not Authorized"))
+		return
+	}
 
 	if len(requestBody) > 0 {
 

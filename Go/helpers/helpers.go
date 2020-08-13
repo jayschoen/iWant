@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -187,4 +188,16 @@ func ListFormatter(rawData []controllers.IWantRow) Blocks {
 	}
 
 	return blocks
+}
+
+func CheckAuthorization(userName string) bool {
+	authorizedUsers := strings.Split(os.Getenv("APP_ADMIN_USERS"), ",")
+
+	for _, authorizedUser := range authorizedUsers {
+		if userName == authorizedUser {
+			return true
+		}
+	}
+
+	return false
 }
