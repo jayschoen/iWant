@@ -92,7 +92,23 @@ func preparePutOrPost(w http.ResponseWriter, r *http.Request) {
 		token := requestBody["token"][0]
 		triggerID := requestBody["trigger_id"][0]
 
-		slackExternalPost(token, triggerID, command)
+		cmdText := helpers.ParseSlackPayloadText(requestBody["text"][0])
+		if command == "/iwant-update" {
+			if cmdText[0] != "" {
+				id, err := strconv.Atoi(cmdText[0])
+
+				if err != nil || id < 1 {
+					helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Want ID"))
+					return
+				}
+
+				slackExternalPost(token, triggerID, command, cmdText[0])
+				return
+			}
+		}
+
+		slackExternalPost(token, triggerID, command, "")
+		return
 
 	}
 
@@ -279,13 +295,13 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func slackExternalPost(token string, triggerID string, command string) {
+func slackExternalPost(token string, triggerID string, command string, optionalWantID string) {
 
 	origination := command
 
 	auth := os.Getenv("SLACK_TOKEN")
 
-	modalInfo := controllers.ConstructModalInfo(triggerID, origination)
+	modalInfo := controllers.ConstructModalInfo(triggerID, origination, optionalWantID)
 
 	url := "https://slack.com/api/views.open"
 	var bearer = "Bearer " + auth
@@ -326,7 +342,7 @@ func executeTests(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(test) */
 
-	slackExternalPost("12345", "abcd1234efgh567.X", "iwant-add2")
+	slackExternalPost("12345", "abcd1234efgh567.X", "iwant-add2", "")
 }
 
 func main() {

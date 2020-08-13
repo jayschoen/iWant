@@ -207,7 +207,7 @@ func OpenDatabase() {
 	db, _ = sql.Open("mysql", mysqlCreds)
 }
 
-func ConstructModalInfo(triggerID string, origination string) string {
+func ConstructModalInfo(triggerID string, origination string, optionalWantID string) string {
 
 	fmt.Println(origination)
 
@@ -225,7 +225,11 @@ func ConstructModalInfo(triggerID string, origination string) string {
 		title = "Update iWant"
 		optional = true
 
-		wantIDblock = `				
+		var initial_value string
+		if optionalWantID != "" {
+			initial_value = fmt.Sprintf(`"initial_value": "%v",`, optionalWantID)
+		}
+		wantIDblock = fmt.Sprintf(`				
 		{
 			"block_id": "want_id",
 			"type": "input",
@@ -233,6 +237,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 			"element": {
 				"type": "plain_text_input",
 				"action_id": "want_id",
+				%v
 				"placeholder": {
 					"type": "plain_text",
 					"text": "WantID"
@@ -242,7 +247,7 @@ func ConstructModalInfo(triggerID string, origination string) string {
 				"type": "plain_text",
 				"text": "WantID"
 			}
-		},`
+		},`, initial_value)
 
 		appointmentTimeBlock = fmt.Sprintf(`,
 			{
