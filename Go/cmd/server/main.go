@@ -33,6 +33,17 @@ func get(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			if helpers.CheckAuthorization(requestBody["user_name"][0]) == false {
+				var filteredWants []controllers.IWantRow
+				for _, want := range wants {
+					if want.SlackName == requestBody["user_name"][0] {
+						filteredWants = append(filteredWants, want)
+					}
+				}
+
+				wants = filteredWants
+			}
+
 			helpers.RespondWithJSON(w, helpers.ListFormatter(wants))
 			return
 
@@ -50,6 +61,17 @@ func get(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				helpers.RespondWithError(w, helpers.ItemFormatter(err.Error()))
 				return
+			}
+
+			if helpers.CheckAuthorization(requestBody["user_name"][0]) == false {
+				if want.SlackName == requestBody["user_name"][0] {
+					helpers.RespondWithJSON(w, helpers.PointerItemFormatter(want))
+					return
+				} else {
+					helpers.RespondWithError(w, helpers.ItemFormatter("Unauthorized"))
+					return
+				}
+
 			}
 
 			helpers.RespondWithJSON(w, helpers.PointerItemFormatter(want))
