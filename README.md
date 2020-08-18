@@ -2,7 +2,7 @@
 an api + db to record "wants" (tasks, meetings, reviews, etc) by team members slack
 
 required environment variables:
-- SLACK_TOKEN (this is your slack apps "Bot User OAuth Access Token")
+- SLACK_TOKEN (this is your slack apps "bot user OAuth access token")
 - DB_USERNAME
 - DB_PASSWORD
 - DB_PROTOCOL
@@ -10,3 +10,9 @@ required environment variables:
 - DB_PORT
 - DB_NAME
 - APP_ADMIN_USERS (this should be a comma separated list of slack usernames)
+
+required slack scopes (add these to your apps "bot token scopes"):
+- chat:write
+- commands
+- im:write
+- users:read
