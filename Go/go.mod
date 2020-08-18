@@ -1,4 +1,4 @@
-module github.com/jayschoen/iWant-backend
+module github.com/jayschoen/iWant
 
 go 1.14
 

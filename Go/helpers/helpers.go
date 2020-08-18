@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	controllers "github.com/jayschoen/iWant-backend/controllers"
+	controllers "github.com/jayschoen/iWant/controllers"
 )
 
 type Blocks struct {
