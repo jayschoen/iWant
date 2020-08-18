@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -100,6 +99,9 @@ func post(w http.ResponseWriter, userInput UserInput) {
 		return
 	}
 
+	want, _ := controllers.GetWantByID(wantID)
+
+	helpers.SendUpdateNotificationToUser(want.SlackName, wantID)
 	w.WriteHeader(http.StatusOK)
 	return
 
@@ -201,7 +203,8 @@ func delete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// TODO: maybe put an error here?
+	helpers.RespondWithError(w, helpers.ItemFormatter("Missing Request Body"))
+	return
 }
 
 type SlackJSON struct {
@@ -270,9 +273,6 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 
 	payload := requestBody["payload"]
 
-	fmt.Println("********** BEFORE MARSHAL")
-	fmt.Println(payload[0])
-
 	var vals SlackJSON
 	err := json.Unmarshal([]byte(payload[0]), &vals)
 	if err != nil {
@@ -285,7 +285,6 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 
 	values := vals.View.State.Values
 
-	userID := user.ID
 	userName := user.Name
 	wantIDString := values.WantID.WantID.Value
 	urgency := values.Urgency.Urgency.SelectedOption.Value
@@ -293,8 +292,6 @@ func captureUserInput(w http.ResponseWriter, r *http.Request) {
 	targetDate := values.TargetDate.TargetDate.SelectedDate
 	targetHour := values.TargetHour.TargetHour.SelectedOption.Value
 	targetMinute := values.TargetMinute.TargetMinute.SelectedOption.Value
-
-	fmt.Println(actionID, wantIDString, userName, userID, urgency, wants, targetDate, targetHour, targetMinute)
 
 	wantIDInt := 0
 	if actionID == "update" {
@@ -349,33 +346,11 @@ func slackExternalPost(token string, triggerID string, command string, optionalW
 	response, err := client.Do(request)
 
 	if err != nil {
-		fmt.Println("POST ERROR")
-		fmt.Println(request)
 		fmt.Println(err.Error())
 	}
 
 	defer response.Body.Close()
 
-	/* *** maybe can get rid of below? *** */
-
-	data, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	fmt.Printf("%s\n", data)
-}
-
-func executeTests(w http.ResponseWriter, r *http.Request) {
-
-	/* test := `{"message": "yay tests"}`
-
-	controllers.Tests()
-
-	json.NewEncoder(w).Encode(test) */
-
-	slackExternalPost("12345", "abcd1234efgh567.X", "iwant-add2", "")
 }
 
 func main() {
@@ -391,8 +366,6 @@ func main() {
 	r.HandleFunc("/update-want", preparePutOrPost)
 
 	r.HandleFunc("/delete-want", delete)
-
-	r.HandleFunc("/tests", executeTests)
 
 	r.HandleFunc("/slack/capture", captureUserInput)
 

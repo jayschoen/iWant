@@ -8,41 +8,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 
 	"fmt"
-	"math/rand"
 	"time"
 )
-
-// Tests TODO: remove this later
-func Tests() {
-
-	fakeSlackID := "aosidjfoasjd" //testingRandNum()
-
-	created := time.Now()
-	appointmentTime := created.Add(time.Hour * 1)
-
-	InsertWant(fakeSlackID, "Wants", "cheese", appointmentTime)
-
-	var urgency, wants string
-	urgency = "string_3"    //append(urgency, "string_3")
-	wants = "thing_3"       //append(wants, "thing_3")
-	time := appointmentTime //append(time, appointmentTime.String())
-
-	UpdateWant(1, urgency, wants, time)
-
-	DeleteWant(2)
-
-	getByID, err := GetWantByID(1)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(getByID)
-
-	getAll, err := GetAllWants()
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(getAll)
-}
 
 func GetWantByID(
 	id int,
@@ -173,14 +140,6 @@ func DeleteWant(
 	return err
 }
 
-func testingRandNum() int {
-	rand.Seed(time.Now().UnixNano())
-	min := 1
-	max := 10000
-
-	return (rand.Intn(max-min+1) + min)
-}
-
 type IWantRow struct {
 	Id              int
 	SlackName       string
@@ -208,8 +167,6 @@ func OpenDatabase() {
 }
 
 func ConstructModalInfo(triggerID string, origination string, optionalWantID string) string {
-
-	fmt.Println(origination)
 
 	var callbackID, title, wantIDblock, appointmentTimeBlock string = "", "", "", ""
 	var optional bool
@@ -374,8 +331,6 @@ func ConstructModalInfo(triggerID string, origination string, optionalWantID str
 			]
 		}
 	}`, triggerID, title, callbackID, wantIDblock, appointmentTimeBlock, optional)
-
-	fmt.Println(modalInfo)
 
 	return modalInfo
 

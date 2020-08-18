@@ -70,8 +70,6 @@ func ParseSlackPayload(request *http.Request) url.Values {
 
 	requestBodyString := string(requestBody)
 
-	fmt.Println(requestBodyString)
-
 	parsedBody, err := url.ParseQuery(requestBodyString)
 
 	if err != nil {
@@ -83,12 +81,6 @@ func ParseSlackPayload(request *http.Request) url.Values {
 
 func ParseSlackPayloadText(text string) []string {
 	return strings.Split(text, " ")
-}
-
-func ArgParser(code int, textValue interface{}) string {
-	fmt.Println(textValue)
-
-	return fmt.Sprintf("%v: %v", code, textValue)
 }
 
 func ItemFormatter(data interface{}) Blocks {
@@ -200,4 +192,135 @@ func CheckAuthorization(userName string) bool {
 	}
 
 	return false
+}
+
+type Users struct {
+	Ok      bool `json:"ok"`
+	Members []struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+}
+
+func getUserList() Users {
+
+	auth := os.Getenv("SLACK_TOKEN")
+
+	payload := fmt.Sprintf(`{"token": "%v"}`, auth)
+
+	urlString := "https://slack.com/api/users.list"
+	var bearer = "Bearer " + auth
+
+	request, err := http.NewRequest("POST", urlString, strings.NewReader(payload))
+
+	request.Header.Set("Authorization", bearer)
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer response.Body.Close()
+
+	var vals Users
+	err = json.Unmarshal([]byte(data), &vals)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return vals
+}
+
+type DirectMessageID struct {
+	Ok      bool `json:"ok"`
+	Channel struct {
+		ID string `json"id"`
+	}
+}
+
+func getDirectMessageID(userName string) DirectMessageID {
+
+	users := getUserList()
+	userID := ""
+	for i := 0; i < len(users.Members); i++ {
+		if users.Members[i].Name == userName {
+			userID = users.Members[i].ID
+		}
+	}
+
+	auth := os.Getenv("SLACK_TOKEN")
+
+	payload := fmt.Sprintf(`{"token": "%v", "users": "%v"}`, auth, userID)
+
+	url := "https://slack.com/api/conversations.open"
+	var bearer = "Bearer " + auth
+
+	request, err := http.NewRequest("POST", url, strings.NewReader(payload))
+
+	request.Header.Set("Authorization", bearer)
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	data, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer response.Body.Close()
+
+	var vals DirectMessageID
+	err = json.Unmarshal([]byte(data), &vals)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return vals
+}
+
+func SendUpdateNotificationToUser(userName string, iWantID int) {
+
+	directMessageID := getDirectMessageID(userName).Channel.ID
+
+	message := fmt.Sprintf(`{
+		"channel": "%v",
+		"text": "Your iWant (#%v) has been updated."
+	}`, directMessageID, iWantID)
+
+	auth := os.Getenv("SLACK_TOKEN")
+
+	url := "https://slack.com/api/chat.postMessage"
+	var bearer = "Bearer " + auth
+
+	request, err := http.NewRequest("POST", url, strings.NewReader(message))
+
+	request.Header.Set("Authorization", bearer)
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+
+	response, err := client.Do(request)
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer response.Body.Close()
 }
