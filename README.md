@@ -1,5 +1,5 @@
-# iWant-backend
-a backend (api + db) to record "wants" (tasks, meetings, reviews, etc) by team members, using the "iWant-frontend" slack app
+# iWant
+an api + db to record "wants" (tasks, meetings, reviews, etc) by team members slack
 
 required environment variables:
 - SLACK_TOKEN
