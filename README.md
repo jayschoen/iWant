@@ -18,7 +18,7 @@ an api + db to record "wants" (tasks, meetings, reviews, etc) by team members sl
 - users:read
 
 **slash command urls**
-- http://<your host>/get-wants
-- http://<your host>/delete-want
-- http://<your host>/update-want
-- https://<your host/create-want
+- http://\<your host\>/get-wants
+- http://\<your host\>/delete-want
+- http://\<your host\>/update-want
+- https://\<your host\>/create-want
