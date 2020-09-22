@@ -1,6 +1,10 @@
 package helpers
 
 import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -323,4 +327,40 @@ func SendUpdateNotificationToUser(userName string, iWantID int) {
 	}
 
 	defer response.Body.Close()
+}
+
+func AuthenticateRequest(request *http.Request) bool {
+
+	secret := os.Getenv("SLACK_SIGNING_SECRET")
+
+	version := "v0"
+
+	xSlackRequestTime := request.Header.Get("X-Slack-Request-Timestamp")
+
+	requestBody, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer request.Body.Close()
+	request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
+	requestBodyString := string(requestBody)
+
+	baseString := version + ":" + xSlackRequestTime + ":" + requestBodyString
+
+	mac := hmac.New(sha256.New, []byte(secret))
+	mac.Write([]byte(baseString))
+	fmt.Println(mac)
+
+	iwantSignature := "v0=" + hex.EncodeToString(mac.Sum(nil))
+
+	xSlackSignature := request.Header.Get("X-Slack-Signature")
+
+	if xSlackSignature == iwantSignature {
+		fmt.Println("Slack request is authentic.")
+		return true
+	}
+	fmt.Println("Slack request is not authentic.")
+	return false
 }

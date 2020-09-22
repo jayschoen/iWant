@@ -17,6 +17,11 @@ import (
 
 func get(w http.ResponseWriter, r *http.Request) {
 
+	if helpers.AuthenticateRequest(r) != true {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Slack Request"))
+		return
+	}
+
 	requestBody := helpers.ParseSlackPayload(r)
 
 	if len(requestBody) > 0 {
@@ -108,6 +113,12 @@ func post(w http.ResponseWriter, userInput UserInput) {
 }
 
 func preparePutOrPost(w http.ResponseWriter, r *http.Request) {
+
+	if helpers.AuthenticateRequest(r) != true {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Slack Request"))
+		return
+	}
+
 	requestBody := helpers.ParseSlackPayload(r)
 
 	if len(requestBody) > 0 {
@@ -167,6 +178,11 @@ func put(w http.ResponseWriter, userInput UserInput) {
 }
 
 func delete(w http.ResponseWriter, r *http.Request) {
+
+	if helpers.AuthenticateRequest(r) != true {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Slack Request"))
+		return
+	}
 
 	requestBody := helpers.ParseSlackPayload(r)
 
@@ -268,6 +284,11 @@ type UserInput struct {
 }
 
 func captureUserInput(w http.ResponseWriter, r *http.Request) {
+
+	if helpers.AuthenticateRequest(r) != true {
+		helpers.RespondWithError(w, helpers.ItemFormatter("Invalid Slack Request"))
+		return
+	}
 
 	requestBody := helpers.ParseSlackPayload(r)
 
