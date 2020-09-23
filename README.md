@@ -3,6 +3,7 @@ an api + db to record "wants" (tasks, meetings, reviews, etc) by team members sl
 
 **required environment variables:**
 - SLACK_TOKEN (this is your slack apps "bot user OAuth access token")
+- SLACK_SIGNING_SECRET (found in your slack apps "basic information" section)
 - DB_USERNAME
 - DB_PASSWORD
 - DB_PROTOCOL
